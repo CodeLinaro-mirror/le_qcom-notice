@@ -1,0 +1,208 @@
+LICENSE AGREEMENT 
+FOR CERTAIN REDISTRIBUTABLE BINARIES OF QUALCOMM TECHNOLOGIES, INC.
+THIS LICENSE AGREEMENT (THE “AGREEMENT” OR “Agreement”) FOR CERTAIN REDISTRIBUTABLE BINARIES OF QUALCOMM TECHNOLOGIES, INC. (THE “SOFTWARE” or 
+“Software”), ALONG WITH ANY RELATED DOCUMENTATION (THE “DOCUMENTATION” OR “Documentation”) AND UPDATES OR IMPROVEMENTS TO THE SOFTWARE OR 
+DOCUMENTATION (COLLECTIVELY, THE “LICENSED MATERIALS” OR “Licensed Materials”), IS A LEGALLY BINDING AGREEMENT BETWEEN QUALCOMM TECHNOLOGIES, INC. 
+(“QTI”) AND YOU (AS AN INDIVIDUAL) OR THE LEGAL ENTITY THAT YOU REPRESENT (“YOU”, “You” or “Your”).   FOR THE AVOIDANCE OF DOUBT, IF THE LICENSED 
+MATERIALS ARE DOWNLOADED BY YOU ON ANY COMPUTER OWNED BY A CORPORATION OR OTHER LEGAL ENTITY THAT YOU REPRESENT, THEN THIS AGREEMENT IS FORMED BY AND 
+BETWEEN QTI AND SUCH ENTITY THAT YOU REPRESENT, AND YOU REPRESENT AND WARRANT TO QTI THAT YOU HAVE THE AUTHORITY TO BIND SUCH ENTITY TO THE TERMS AND 
+CONDITIONS OF THIS AGREEMENT.  THIS AGREEMENT CAN BE ACCEPTED ONLY BY AN ADULT OF LEGAL AGE OF MAJORITY IN THE COUNTRY IN WHICH THE LICENSED 
+MATERIALS ARE USED.  IF YOU ARE UNDER THE LEGAL AGE OF MAJORITY, YOU MUST ASK YOUR PARENT OR LEGAL GUARDIAN TO CONSENT TO THIS AGREEMENT. BY USING OR 
+COMPLETING THE INSTALLATION OF THE LICENSED MATERIALS, YOU ARE ACCEPTING THIS AGREEMENT AND YOU AGREE TO BE BOUND BY ITS TERMS AND CONDITIONS. YOU 
+AGREE TO USE THE LICENSED MATERIALS ONLY FOR PURPOSES THAT ARE PERMITTED BY THIS AGREEMENT AND ANY APPLICABLE LAW OR REGULATION IN THE RELEVANT 
+JURISDICTIONS.  IF YOU DON’T MEET THE REQUIRED AGE OR HAVE THE AUTHORITY TO ACCEPT THIS AGREEMENT OR IF YOU DO NOT AGREE TO THE TERMS OF THE 
+AGREEMENT, QTI IS UNWILLING TO AND DOES NOT LICENSE THE LICENSED MATERIALS TO YOU AND YOU MAY NOT INSTALL OR USE THE LICENSED MATERIALS OR RETAIN ANY 
+COPIES OF THE LICENSED MATERIALS.  ANY USE OR POSSESSION OF THE LICENSED MATERIALS BY YOU IS SUBJECT TO THE TERMS AND CONDITIONS SET FORTH IN THIS 
+AGREEMENT.
+YOU ARE ADVISED TO PRINT THIS AGREEMENT FOR YOUR RECORDS AND/OR SAVE IT TO YOUR COMPUTER.
+1.	LICENSE GRANT.
+1.1	License Grant.  Subject to the terms and conditions of this Agreement, including, without limitation, the restrictions, conditions, and 
+obligations set forth herein, QTI hereby grants to You a personal, non-exclusive, non-transferable, non-assignable, revocable, limited copyright 
+license, during the term of this Agreement, in accordance with the Documentation made available by QTI in connection with the Software, if any, (i) 
+to download, install and use the Software in machine-readable (i.e. object code) form solely for products and applications that are specifically 
+designed for use with Platforms (as defined below); (ii) to reproduce and redistribute, subject to Section 1.2 (Redistribution Restrictions) of this 
+Agreement, the binary code portions of the Software (the "Redistributable Binary Code"); and (iii) use or copy the Software for archival purposes.
+1.2	Redistribution Restrictions.  Distribution of the Redistributable Binary Code is subject to the following restrictions: (i) Redistributable 
+Binary Code may only be distributed in binary format and may not be distributed in source code format; (ii)  the Redistributable Binary Code may only 
+operate in conjunction with platforms that contain a semiconductor product sold under QTI’s (or QTI’s affiliates’) label or manufactured under 
+license from QTI (or QTI’s affiliates) (“Platform”); and (iii) redistribution of the Redistributable Binary Code must include a readable text file 
+(e.g. a .txt file) setting forth the terms and condition of this Agreement, along with any Notice Files (as defined below) related to the 
+Redistributable Binary Code. 
+1.3	Documentation.  Subject to the terms and conditions of this Agreement, including the limitations, restrictions and obligations set forth below, 
+You may reproduce and use, on an internal basis only, a reasonable number of copies of the Documentation, solely in support of Your use of Software.  
+Distribution of the Documentation is prohibited without the express written permission of QTI. 
+1.4	Pre-Release Software.  Any Software versions identified as alpha, beta, preview or otherwise as pre-release may not be fully functional, may 
+contain errors or design flaws, and may have reduced or different security, privacy, accessibility, availability, and reliability standards relative 
+to commercial versions of QTI software and materials. You may use pre-release Software at Your own risk, understanding that pre-release Software is 
+not intended for use in production or business-critical systems and QTI may choose not to make available a commercial version of any pre-release 
+Software.
+1.5	Updates.  QTI may, at its option, make available patches, workarounds or other updates to the Licensed Materials (collectively “Updates”). Unless 
+the Updates are provided with their separate governing terms, they are deemed part of the Software or Documentation, as the case may be, licensed to 
+you as provided in this Agreement, and by accepting, possessing or using such additional Updates, You agree that the terms of this Agreement will 
+apply thereto.
+1.6	Third-Party Materials.  The Software may contain or link to certain software code and/or materials, including, without limitation, open-source 
+software components, that are written or owned by third parties (“Third-Party Software”). QTI may provide You with notice and/or attribution 
+information, which may be provided in the form of a separate document, a digital file, readme file, release notes, a support website, software code, 
+or other suitable communication, pertaining to such Third-Party Software (each a “Notice File”).  Except (i) where QTI expressly identifies a 
+third-party license contained in a Notice File as a pass-through license, or (ii) where expressly prohibited by a third-party license contained in a 
+Notice File, including, without limitation, any Open-Source License Terms (as defined in Section 4.2 (Open-Source Restrictions) below) included 
+therein ((i) and (ii) the “Exceptions”), Your use of such Third-Party Software is subject to the terms and conditions of this Agreement, and the 
+content of such Notice File is provided solely to satisfy QTI’s notice and/or attribution obligations. You further acknowledge and agree that: (a) 
+compliance with all copyright laws and any third-party license included in a Notice File is the responsibility of You; (b) You shall not remove or 
+alter any Notice File; (c) no license to any patent, trademark, copyright, or other intellectual property of QTI or a QTI affiliate is provided by a 
+Notice File itself; (d) the delivery hereunder of any Software, including any part thereof, to You is NOT A CONTRIBUTION to any open-source project; 
+and (e) except with respect to the Exceptions set forth above, in the event of any conflict between the terms and conditions of this Agreement and 
+any third-party license included in a Notice File, this Agreement shall control.
+2.	AUTHORIZED USERS. You may allow employees of Your entity to access and use the Licensed Materials from Your secure network to perform the work 
+authorized by this Agreement on Your behalf. If You are an academic institution, You may allow users enrolled or employed by the academic institution 
+to access and use the Licensed Materials as authorized by this Agreement from Your secure network. You are responsible for the compliance with the 
+terms of this Agreement by Your authorized users. Any act or omission that if committed by You would constitute a breach of this Agreement will be 
+deemed to constitute a breach of this Agreement if committed by Your authorized users.
+3.	INTELLECTUAL PROPERTY RIGHTS. 
+3.1	Ownership.    The Licensed Materials, including all intellectual property rights, is and will remain the sole and exclusive property of QTI or 
+its licensors. Except as expressly granted in this Agreement, (i) QTI reserves all rights, interests, and remedies in connection with the Licensed 
+Materials, and (ii) no other license or right is granted to you by implication, estoppel or otherwise.  Furthermore, neither QTI nor any of its 
+affiliates is authorized to license the Licensed Materials or any portion thereof under the patents of QUALCOMM Incorporated or SnapTrack, Inc.  
+Accordingly, neither the license of nor access to the Licensed Materials or any portion thereof by QTI or its affiliates, nor any provision of this 
+Agreement shall be construed as to grant to You either expressly, by implication or by way of estoppel, any license or other right under any of such 
+patents of QUALCOMM Incorporated or SnapTrack, Inc.  You, on behalf of Yourself and Your affiliates, agrees not to contend in any context that, as a 
+result of the provision or use of the Licensed Materials, or any portion thereof, QTI or its affiliates has any obligation to extend, or You or any 
+other party has obtained any right to, any license, whether express or implied, with respect to any patent of QUALCOMM Incorporated or SnapTrack, 
+Inc. for any purpose.
+3.2	Feedback.   You may, but you are not obligated to, provide suggestions, requests, fixes, modifications, enhancements, or other feedback regarding 
+the Licensed Materials (collectively, “Feedback”).  Feedback, even if designated as confidential by You, shall not create any confidentiality 
+obligation for QTI or its affiliates. If You provide Feedback, You hereby grant QTI, its affiliates and its designees a non-exclusive, perpetual, 
+irrevocable, sublicensable, worldwide, royalty-free, fully paid-up and transferable license, under Your intellectual property rights, to publicly 
+perform, publicly display, reproduce, use, make, have made, sell, offer for sale, distribute (through multiple tiers of distribution), import, create 
+derivative works of and otherwise commercialize and exploit the Feedback at QTI’s discretion.  Furthermore, You agree that all inventions, product 
+improvements, and modifications conceived of or made by QTI that are based, either in whole or in part, on the Feedback from You are the exclusive 
+property of QTI, and all right, title and interest in and to any such inventions, product improvements, and modifications will vest solely in QTI.  
+Moreover, You will not give Feedback (i) that You have reason to believe is subject to any restriction that impairs the exercise of the grant stated 
+in this section, such as third-party intellectual property rights; or (ii) subject to license terms which seek to require any product incorporating 
+or developed using such Feedback, or other intellectual property of QTI or its affiliates, to be licensed to or otherwise shared with any third party.
+4.	RESTRICTIONS.  
+4.1	Use Restrictions.  You shall not attempt, knowingly permit or encourage others to attempt to: (i) reverse engineer, reverse compile, disassemble, 
+decompile, or translate the Software, or otherwise attempt to derive the source code version of the Software, in whole or part; (ii) use any 
+mechanical, electronic, or other method to trace, decompile, disassemble or decrypt the Software; (iii) bypass, disable, or circumvent any technical 
+limitation, encryption, security, digital rights management or authentication mechanism in the Software; (iv) use the Licensed Materials for any 
+purpose that is illegal or may cause reputational harm to QTI or its affiliates or subsidiaries; or (v) use the Licensed Materials for the purpose of 
+identifying or providing evidence to support any potential patent infringement claim against QTI, its affiliates, or any of QTI's or QTI's 
+affiliates' suppliers and/or direct or indirect customers.
+
+	In addition, You shall not attempt, knowingly permit or encourage others to attempt to: (i) make any copies of the Licensed Materials except as 
+otherwise permitted under Section 1.1 (License Grant) of this Agreement in the case of Software and under Section 1.3 (Documentation) of this 
+Agreement in the case of Documentation; (ii) rent, lease, loan, reproduce (except as to the Redistributable Binary Code, as expressly set forth 
+in Section 1.1 (License Grant) of this Agreement, and the Documentation as expressly set forth in Section 1.3 (Documentation) of this Agreement 
+), modify, distribute (except as to the Redistributable Binary Code, as expressly set forth in Section 1.1 (License Grant) of this Agreement), 
+publicly perform, publicly display or create derivative works of or based on the Licensed Materials, or disclose, provide or otherwise distribute 
+or transfer, in any manner, to any third party the Licensed Materials or any portion thereof (except as to the Redistributable Binary Code, as 
+expressly set forth in Section 1.1 (License Grant) of this Agreement); or (iii) use the Licensed Materials for any purpose other than as 
+expressly permitted in the case of the Software, Section 1.1 (License Grant) of this Agreement, and in the case of Documentation, Section 1.3 
+(Documentation) of this Agreement.
+
+	Furthermore, You may not use QTI’s or its affiliates’ name, logo or trademarks, and the copyright, trademark, patent and any other notices that 
+appear on the Licensed Materials may not be removed or obscured. 
+
+4.2	Open-Source Restrictions.  In addition to the restrictions set forth above, You shall not engage in any act or failure to act that enables, 
+causes or facilitates any use or distribution of the Software or any Third-Party Software in a manner that causes any patents, copyrights or other 
+intellectual property rights owned or controlled by QTI or any of its affiliates (or for which QTI or any of its affiliates has received license 
+rights) to become subject to any encumbrance or terms and conditions of any Open-Source License Terms, and You shall restrict each of Your authorized 
+users from same.   “Open-Source License Terms” means terms in any license for software that, as a condition of use, copying, modification or 
+redistribution, require such software and/or derivative works thereof to be disclosed or distributed in source code form, to be licensed for the 
+purpose of making derivative works, or to be distributed free of charge, including without limitation software distributed under the GPL (GNU General 
+Public License) or LGPL (GNU Lesser General Public License).  The rights granted by QTI in this Agreement are expressly conditioned upon Your full 
+compliance with this Section.
+4.3	Critical Application.  Unless You otherwise have an agreement with QTI for this purpose, You may not use the Software in connection with the 
+design, construction, maintenance, and/or operation of any system where the use or failure of such system could result in a situation that threatens 
+the safety of human life or results in catastrophic damages (each, a “Critical Application”). Examples of Critical Applications include use in 
+avionics, navigation, autonomous vehicle applications, ai solutions for automotive products, military, medical, life support or other life critical 
+applications. As provided by QTI, the Software has not been tested or certified for such uses and QTI and its affiliates shall not be liable to You 
+or any third party, in whole or in part, for any claims or damages arising from such uses. 
+5.	NO TECHNICAL SUPPORT.  You acknowledge and agree that that the Licensed Materials are provided “AS IS” and that QTI is under no obligation to 
+provide any form of technical support in regard to the Licensed Materials.
+6.	NO WARRANTY.  YOU EXPRESSLY ACKNOWLEDGE AND AGREE THAT THE USE OF THE LICENSED MATERIALS IS AT YOUR SOLE RISK.  THE LICENSED MATERIALS AND 
+TECHNICAL SUPPORT, IF ANY, ARE PROVIDED AS IS AND WITH ALL FAULTS, AND WITHOUT WARRANTY OF ANY KIND, WHETHER EXPRESS OR IMPLIED.  QTI, ITS 
+AFFILIATES, AND THE LICENSORS OF QTI AND ITS AFFILIATES MAKE NO WARRANTIES, EXPRESS OR IMPLIED, WITH RESPECT TO THE LICENSED MATERIALS, TECHNICAL 
+SUPPORT OR ANY OTHER INFORMATION OR DOCUMENTATION PROVIDED UNDER THIS AGREEMENT, INCLUDING BUT NOT LIMITED TO ANY WARRANTY OF MERCHANTABILITY OR 
+FITNESS FOR A PARTICULAR PURPOSE OR AGAINST INFRINGEMENT, OR ANY EXPRESS OR IMPLIED WARRANTY ARISING OUT OF TRADE USAGE OR OUT OF A COURSE OF DEALING 
+OR COURSE OF PERFORMANCE.
+7.	LIMITATION OF LIABILITY.  TO THE FULLEST EXTENT PERMITTED BY APPLICABLE LAW, IN NO EVENT SHALL QTI, QTI’S AFFILIATES OR THE LICENSORS OF QTI AND 
+ITS AFFILIATES BE LIABLE TO YOU FOR ANY INCIDENTAL, CONSEQUENTIAL OR SPECIAL DAMAGES, INCLUDING BUT NOT LIMITED TO ANY LOST PROFITS, LOST SAVINGS, OR 
+OTHER INCIDENTAL DAMAGES, ARISING OUT OF THE USE OR INABILITY TO USE, OR THE DELIVERY OR FAILURE TO DELIVER, THE LICENSED MATERIALS, OR ANY BREACH OF 
+ANY OBLIGATION UNDER THIS AGREEMENT, EVEN IF QTI HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.  THE FOREGOING LIMITATION OF LIABILITY SHALL 
+REMAIN IN FULL FORCE AND EFFECT REGARDLESS OF WHETHER YOUR REMEDIES HEREUNDER ARE DETERMINED TO HAVE FAILED OF THEIR ESSENTIAL PURPOSE.  TO THE 
+MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW, THE ENTIRE LIABILITY OF QTI, QTI’s AFFILIATES AND THE LICENSORS OF QTI AND ITS AFFILIATES, AND THE SOLE 
+AND EXCLUSIVE REMEDY OF YOU, FOR ANY CLAIM OR CAUSE OF ACTION ARISING HEREUNDER (WHETHER IN CONTRACT, TORT, OR OTHERWISE) SHALL NOT EXCEED FIVE 
+DOLLARS (US$5.00) 
+8.	INDEMNITY.  You agree to defend, indemnify and hold harmless QTI and its affiliates, and their respective officers, directors, employees, 
+contractors, agents, successors and assigns harmless from and against any and all claims, losses, damages, judgments, costs or debts, liabilities, 
+fines, restitutions and expenses (including but not limited to attorneys' fees and costs incident to establishing the right of indemnification) 
+arising out of or related to Your use, misuse or operation of Licensed Materials to the fullest extent permitted by law.
+9.	TERM AND TERMINATION.  This Agreement shall be effective upon acceptance by You and shall continue until terminated. You may terminate the 
+Agreement at any time by deleting and destroying all copies of the Licensed Materials and related information in Your possession or control. This 
+Agreement terminates immediately and automatically, with or without notice, if You fail to comply with any provision of this Agreement.  
+Additionally, QTI may at any time terminate this Agreement, for any reason, with or without notice.  Upon termination You must, to the extent 
+possible, delete or destroy all copies of the Software, including Documentation, in Your possession and the licenses granted to You in this Agreement 
+shall terminate.  Your obligations which by their sense and context are intended to survive any termination or expiration of this Agreement shall so 
+survive, including, without limitation, Your obligations under Section 3 (Intellectual Property Rights), Section 4 (Restrictions), Section 6 (No 
+Warranty), Section 7 (Limitation of Liability), Section 8 (Indemnity), Section 10 (Export and Trade Controls Compliance) and Section 11 (U.S. 
+Government Users (the “Government”)) of this Agreement.   In the event that any restrictions, conditions, limitations are found to be either invalid 
+or unenforceable, the rights granted to You in Section 1 (License Grant) shall be null, void and ineffective as of the date You selected the Accept 
+Box, and QTI shall also have the right to terminate this Agreement immediately, and with retroactive effect to such acceptance date.
+10.	EXPORT AND TRADE CONTROLS COMPLIANCE.  You acknowledge that the hardware, software, source code and technology, including, without limitation, 
+the Licensed Materials (collectively, "Items") obtained from QTI are subject to US export control and economic sanctions laws, orders, and 
+regulations, including without limitation the Export Administration Regulations ("EAR"), 15 CFR Parts 730-774, and the Foreign Assets Control 
+Regulations, 31 CFR Parts 500-599, as well as similar laws and regulations of other applicable jurisdictions (collectively, “Export and Sanctions 
+Laws”). In connection with the performance of obligations under this Agreement, You assure that You and Your affiliates and agents (i) will comply 
+with all Export and Sanctions Laws, including by obtaining any required US or other country licenses, authorizations, or approvals, and (ii) will not 
+engage in any activity that would reasonably be expected to cause QTI to violate any Export and Sanctions Laws.  You warrant that neither You, nor 
+Your affiliates and agents, will directly or indirectly export, re-export, transfer or release (collectively, "Export") any Items (whether or not 
+incorporated into another item) or any direct product thereof, to any country or territory, its government, any entity located in or organized under 
+the laws of such country or territory, or any individual located or resident in such country or territory, if, at the time of Export, the US 
+government maintains comprehensive economic sanctions or an embargo with respect to such country or territory (“Embargoed Country”), without prior 
+government authorization. The US government currently maintains comprehensive economic sanctions or an embargo against Cuba, Iran, North Korea, 
+Syria, and the Crimea and so-called Donetsk People’s Republic and Luhansk People’s Republic regions of Ukraine.  The list of Embargoed Countries may 
+be amended over time.  The US government also has imposed extensive export control and sanctions restrictions on, inter alia, Belarus, the Russian 
+Federation, and Venezuela. You further agree not to directly or indirectly employ any Items in, or Export any Items for, end uses or end users that 
+would violate the controls in Part 744 of the EAR, without prior US government authorization, including those related to prohibited missile or UAV 
+technology; prohibited nuclear, chemical, or biological weapons activities; prohibited supercomputer and semiconductor manufacturing end uses; or for 
+any prohibited military end use or end user. You warrant that neither You, nor Your affiliates or agents, are: (i) listed on a prohibited or 
+restricted party list published by the US government, including but not limited to the U.S. Department of Treasury’s “List of Specially Designated 
+Nationals and Blocked Persons” and “Consolidated Sanctions List”, and the US Department of Commerce’s Entity List, Unverified List, and Denied 
+Persons List, or any similar list maintained by the United Kingdom, the European Union or its Member States, or other applicable local authority; 
+(ii) located, organized or resident in an Embargoed Country; (iii) owned (50% or more) or controlled, directly or indirectly, by a person or entity 
+described in clauses (i) or (ii); or (iv) otherwise the target of US sanctions (collectively, “Restricted Persons”). You shall not Export any Items 
+to any Restricted Persons without prior US government authorization, to the extent required by regulation. If You are a person or entity located in 
+Belarus, Cambodia, the People’s Republic of China, the Russian Federation, Venezuela or Myanmar, You certify that You are not a "military end-user" 
+as that term is defined in section 744.21 of the EAR.  You acknowledge that the foregoing certifications are conditions to Your access to Items.  
+This section shall survive the expiration or termination of this Agreement.
+11.	U.S. GOVERNMENT USERS (the “Government”).  The Licensed Materials are a “Commercial Product” as that term is defined at 48 C.F.R. §2.101.  The 
+Licensed Materials consists of “Computer Software”, “Commercial Computer Software”, “Commercial Computer Software Documentation”, and “Technical 
+Data” as those terms are used in 48 C.F.R. §12.211, §12.212, or 48 C.F.R. §227.7202, as applicable. Consistent with 48 C.F.R. §12.211, §12.212, or 48 
+C.F.R. §227.7202-1 through 227.7202-4, as applicable, Computer Software, Commercial Computer Software, Commercial Computer Software Documentation, 
+and Technical Data are being licensed to the Government (a) only as a Commercial Product and (b) with only those commercial rights granted pursuant 
+to the terms and conditions in this Agreement, including all obligations, restrictions, and conditions set forth herein. This Section 11 applies to 
+any acquisitions of the Licensed Materials by or for the Government, including by any prime contractor or subcontractor under any Government 
+contract, grant, cooperative agreement, or other agreement or activity with the Government for Government use.
+12.	GOVERNING LAW AND JURISDICTION. This Agreement is governed and interpreted in accordance with the laws of the State of California without giving 
+effect to its conflict of laws provisions. The United Nations Convention on Contracts for the International Sale of Goods is expressly disclaimed and 
+shall not apply. Any claim arising out of or related to this Agreement must be brought exclusively in a federal or state court located in San Diego 
+County, California and You consent to the jurisdiction and venue of such courts.
+13.	ASSIGNMENT. QTI may assign, delegate or transfer its rights or obligations under this Agreement by any means or operation of law. You may not, 
+without QTI’s prior written consent, assign, delegate or transfer any of your rights or obligations under this Agreement by any means or operation of 
+law, and any attempt to do so is null and void.
+14.	WAIVER. No failure or delay by a party to enforce any Agreement term or obligation will operate as a waiver by that party, nor prevent the 
+enforcement of such term or obligation later.
+15.	SEVERABILITY. If any provision of this Agreement shall be unlawful, void or for any reason unenforceable, then that provision shall be deemed 
+severable from this Agreement and shall not affect the validity and enforceability of any remaining provisions.
+16.	LANGUAGE.  This Agreement is solely effective in its English language version and any translations of this Agreement are provided solely for 
+information and convenience. In the event this Agreement is translated into any language other than English, the English version shall in all 
+respects control and apply in case of any differences or discrepancies.
+17.	GENERAL.  You agree to cooperate with QTI and provide reasonably requested information to verify Your compliance with this Agreement.  This 
+Agreement is the entire and exclusive agreement between QTI and You with respect to the Licensed Materials and supersedes all prior agreements 
+(whether written or oral) and other communications between QTI and You with respect to the Licensed Materials.  Any amendment to this Agreement must 
+be in writing and signed by authorized representatives of both parties. In terms of the enforceability of this Agreement, the Agreement shall be 
+deemed to be "in writing" and "accepted" by both parties.  You will not contest the validity or enforceability of this Agreement solely because it 
+was concluded electronically.  For the avoidance of doubt, QTI and You acknowledge and agree that it is not a requirement to the effectiveness and 
+enforceability of this Agreement that either party sign this Agreement.
+
