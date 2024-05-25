@@ -72,10 +72,10 @@ mkdir -p $WORKDIR
 cd $WORKDIR
 
 # repo init
-repo init -u "$URL" -b "$BRANCH" -m "$MANIFEST"
+time repo init -u "$URL" -b "$BRANCH" -m "$MANIFEST"
 
 # repo sync
-repo sync -j`nproc`
+time repo sync -c --no-tags -j`nproc`
 
 # build variables
 MACHINE="$MACHINE"
@@ -86,7 +86,7 @@ export SHELL=/bin/bash
 source setup-environment
 
 # Run build
-bitbake "$IMAGE"
+time bitbake "$IMAGE"
 
 SUBDIR="${WORKDIR%/*}"
 
