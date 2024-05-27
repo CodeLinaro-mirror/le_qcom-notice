@@ -83,10 +83,16 @@ DISTRO="$DISTRO"
 
 # setup environment
 export SHELL=/bin/bash
+if [[ "$MANIFEST" =~ "qim-product-sdk" ]]; then
+   export EXTRALAYERS="meta-qcom-qim-product-sdk"
+fi
 source setup-environment
 
 # Run build
 time bitbake "$IMAGE"
+if [[ "$MANIFEST" =~ "qim-product-sdk" ]]; then
+   time bitbake qim-product-sdk
+fi
 
 SUBDIR="${WORKDIR%/*}"
 
