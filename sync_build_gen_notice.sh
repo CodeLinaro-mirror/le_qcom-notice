@@ -92,6 +92,7 @@ source setup-environment
 time bitbake "$IMAGE"
 if [[ "$MANIFEST" =~ "qim-product-sdk" ]]; then
    time bitbake qim-product-sdk
+   time bitbake -c populate_sdk_ext qcom-multimedia-image
 fi
 
 SUBDIR="${WORKDIR%/*}"
