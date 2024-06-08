@@ -93,17 +93,22 @@ time bitbake "$IMAGE"
 if [[ "$MANIFEST" =~ "qim-product-sdk" ]]; then
    time bitbake qim-product-sdk
    time bitbake -c populate_sdk_ext qcom-multimedia-image
+else
+   time bitbake -c populate_sdk_ext qcom-multimedia-image
 fi
 
 SUBDIR="${WORKDIR%/*}"
 
 # copy nhlos notice files
-cp $SUBDIR/scripts/nhlos/License-Agreement-for-Redistributable-Binaries-of-QTI.txt $WORKDIR
-cp $SUBDIR/scripts/nhlos/license.qcom.txt $WORKDIR
+cp $SUBDIR/scripts/hwe/NO.LOGIN.BINARY.LICENSE.QTI.pdf $WORKDIR
+cp $SUBDIR/scripts/nhlos/NHLOS_NOTICE $WORKDIR
 cat $SUBDIR/scripts/hwe/NOTICE >> $WORKDIR/NOTICE
 
 # Go to working directory
 cd $WORKDIR
+
+# Append NOTICE file from nologin NHLOS proprietary bins to NOTICE file from nologin HLOS proprietary bins
+cat NHLOS_NOTICE >> NOTICE
 
 # Get notices related to all the open-source modules that are pulled during build
 NoticeFilesList=`find ./ -type f -iname "Notice" -o -iname "License" -o -iname "Copying" -o -iname "Credits" -o -iname "Patent" -o -iname "copyright" | xargs`
