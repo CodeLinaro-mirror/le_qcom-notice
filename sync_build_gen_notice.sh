@@ -36,13 +36,15 @@ Usage:
         -w, --workdir
             Working directory (Eg: /local/mnt/worksapce/test)
 
+        -a, --arch
+            architecture (Eg: x86, arm)
 
 END_OF_USAGE
     exit 1
 }
 
-LONG_OPTS="url:,help,branch:,manifest:,machine:,distro:,image:,workdir:,"
-GETOPT_CMD=$(getopt -o b:d:h:i:m:M:u:w: -l $LONG_OPTS -n $(basename $0) -- "$@"
+LONG_OPTS="url:,help,branch:,manifest:,machine:,distro:,image:,workdir:,arch:,"
+GETOPT_CMD=$(getopt -o b:d:h:i:m:M:u:w:a: -l $LONG_OPTS -n $(basename $0) -- "$@"
 ) || \
             { echo "error parsing options."; echo_usage; }
 
@@ -58,6 +60,7 @@ while true; do
        -d|--distro) DISTRO="$2"; shift ;;
        -i|--image) IMAGE="$2"; shift ;;
        -w|--workdir) WORKDIR="$2"; shift ;;
+       -a|--arch) ARCH="$2"; shift ;;
        --) shift ; break ;;
        *) echo "Error processing args -- unrecognized option $1" >&2
           exit 1;;
@@ -83,6 +86,9 @@ DISTRO="$DISTRO"
 
 # setup environment
 export SHELL=/bin/bash
+if [[ "$ARCH" =~ "arm" ]]; then
+    export SDKMACHINE="aarch64"
+fi
 if [[ "$MANIFEST" =~ "qim-product-sdk" ]]; then
    export EXTRALAYERS="meta-qcom-qim-product-sdk"
 fi
