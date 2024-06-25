@@ -101,14 +101,32 @@ fi
 
 # Run build
 time bitbake "$IMAGE"
+if [ $? != 0 ]; then
+   exit 1
+fi
 if [[ "$MANIFEST" =~ "qim-product-sdk" ]]; then
    time bitbake qim-product-sdk
+   if [ $? != 0 ]; then
+      exit 1
+   fi
    time bitbake -c populate_sdk_ext qcom-multimedia-image
+   if [ $? != 0 ]; then
+      exit 1
+   fi
 elif [[ "$MANIFEST" =~ "robotics-product-sdk" ]]; then
    time ../qirp-build qcom-robotics-full-image
+   if [ $? != 0 ]; then
+      exit 1
+   fi
    time bitbake -fc populate_sdk_ext qcom-robotics-full-image
+   if [ $? != 0 ]; then
+      exit 1
+   fi
 else
    time bitbake -c populate_sdk_ext qcom-multimedia-image
+   if [ $? != 0 ]; then
+      exit 1
+   fi
 fi
 
 SUBDIR="${WORKDIR%/*}"
