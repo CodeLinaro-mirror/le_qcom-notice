@@ -90,23 +90,23 @@ export SHELL=/bin/bash
 #export SDKMACHINE="aarch64"
 #fi
 #if [[ "$MANIFEST" =~ "qim-product-sdk" ]]; then
-export EXTRALAYERS="meta-qcom-qim-product-sdk"
+#export EXTRALAYERS="meta-qcom-qim-product-sdk"
 #fi
 
 #if [[ "$MANIFEST" =~ "robotics-product-sdk" ]]; then
-#   source setup-robotics-environment
+source setup-robotics-environment
 #else
-source setup-environment
+#source setup-environment
 #fi
 
 # Run build
-time bitbake "$IMAGE"
+#time bitbake "$IMAGE"
 #if [[ "$MANIFEST" =~ "qim-product-sdk" ]]; then
-time bitbake qim-product-sdk
-time bitbake -c populate_sdk_ext qcom-multimedia-image
+#time bitbake qim-product-sdk
+#time bitbake -c populate_sdk_ext qcom-multimedia-image
 #elif [[ "$MANIFEST" =~ "robotics-product-sdk" ]]; then
-#   time ../qirp-build qcom-robotics-full-image
-#   time bitbake -fc populate_sdk_ext qcom-robotics-full-image
+time ../qirp-build qcom-robotics-full-image
+time bitbake -fc populate_sdk_ext qcom-robotics-full-image
 #else
 #   time bitbake -c populate_sdk_ext qcom-multimedia-image
 #fi
@@ -117,7 +117,7 @@ SUBDIR="${WORKDIR%/*}"
 cp $SUBDIR/scripts/hwe/NO.LOGIN.BINARY.LICENSE.QTI.pdf $WORKDIR
 cp $SUBDIR/scripts/nhlos/NHLOS_NOTICE $WORKDIR
 #if [[ "$MANIFEST" =~ "robotics-product-sdk" ]]; then
-#   cp $SUBDIR/scripts/robotics/ROBOTICS_NOTICE $WORKDIR
+cp $SUBDIR/scripts/robotics/ROBOTICS_NOTICE $WORKDIR
 #fi
 cat $SUBDIR/scripts/hwe/NOTICE >> $WORKDIR/NOTICE
 
@@ -126,7 +126,7 @@ cd $WORKDIR
 
 # Append NOTICE file from nologin NHLOS proprietary bins to NOTICE file from nologin HLOS proprietary bins
 #if [[ "$MANIFEST" =~ "robotics-product-sdk" ]]; then
-#   cat ROBOTICS_NOTICE >> NOTICE
+cat ROBOTICS_NOTICE >> NOTICE
 #fi
 cat NHLOS_NOTICE >> NOTICE
 
