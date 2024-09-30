@@ -89,7 +89,7 @@ QCOM_SELECTED_BSP=custom
 # setup environment
 export SHELL=/bin/bash
 #if [[ "$ARCH" =~ "arm" ]]; then
-#export SDKMACHINE="aarch64"
+export SDKMACHINE="aarch64"
 #fi
 #if [[ "$MANIFEST" =~ "qim-product-sdk" ]]; then
 #export EXTRALAYERS="meta-qcom-qim-product-sdk"
