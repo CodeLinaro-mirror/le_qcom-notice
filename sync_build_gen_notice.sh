@@ -96,11 +96,13 @@ if [[ "$MANIFEST" =~ "qim-product-sdk" ]]; then
 fi
 
 if [[ "$MANIFEST" =~ "robotics-product-sdk" ]]; then
+   echo "Before Source"
    source setup-robotics-environment
-   echo "Sourced"
+   echo "After Source"
 else
+   echo "Before Source"
    source setup-environment
-   echo "Sourced"
+   echo "After Source"
 fi
 
 # Run build
