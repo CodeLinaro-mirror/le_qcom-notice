@@ -97,8 +97,10 @@ fi
 
 if [[ "$MANIFEST" =~ "robotics-product-sdk" ]]; then
    source setup-robotics-environment
+   echo "Sourced"
 else
    source setup-environment
+   echo "Sourced"
 fi
 
 # Run build
