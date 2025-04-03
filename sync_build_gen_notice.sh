@@ -83,8 +83,10 @@ time repo sync -c --no-tags -j`nproc`
 # build variables
 MACHINE="$MACHINE"
 DISTRO="$DISTRO"
-DEBUG_BUILD=1
-QCOM_SELECTED_BSP=custom
+if [[ "$MANIFEST" =~ "robotics-product-sdk" ]]; then
+   DEBUG_BUILD=1
+   QCOM_SELECTED_BSP=custom
+fi
 
 # setup environment
 export SHELL=/bin/bash
@@ -96,13 +98,13 @@ if [[ "$MANIFEST" =~ "qim-product-sdk" ]]; then
 fi
 
 if [[ "$MANIFEST" =~ "robotics-product-sdk" ]]; then
-   echo "Before Source"
+   echo "Don't remove: Temp Fix: before Source"
    source setup-robotics-environment
-   echo "After Source"
+   echo "Don't remove: Temp Fix: After Source"
 else
-   echo "Before Source"
+   echo "Don't remove: Temp Fix: before Source"
    source setup-environment
-   echo "After Source"
+   echo "Don't remove: Temp Fix: After Source"
 fi
 
 # Run build
