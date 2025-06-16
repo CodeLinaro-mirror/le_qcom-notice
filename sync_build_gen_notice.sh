@@ -111,13 +111,13 @@ fi
 if [[ "$MANIFEST" =~ "qim-product-sdk" ]]; then
    time bitbake "$IMAGE"
    time bitbake qcom-qim-product-sdk
-   time bitbake -c populate_sdk_ext qcom-multimedia-image
+   time bitbake -c populate_sdk_ext qcom-multimedia-image && bitbake -c do_populate_sdk qcom-multimedia-image
 elif [[ "$MANIFEST" =~ "robotics-product-sdk" ]]; then
    time ../qirp-build qcom-robotics-full-image
    time bitbake -fc populate_sdk_ext qcom-robotics-full-image
 else
    time bitbake "$IMAGE"
-   time bitbake -c populate_sdk_ext qcom-multimedia-image
+   time bitbake -c populate_sdk_ext qcom-multimedia-image && bitbake -c do_populate_sdk qcom-multimedia-image
 fi
 
 SUBDIR="${WORKDIR%/*}"
