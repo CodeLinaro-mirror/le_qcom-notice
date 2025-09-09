@@ -83,7 +83,7 @@ time repo sync -c --no-tags -j`nproc`
 # build variables
 MACHINE="$MACHINE"
 DISTRO="$DISTRO"
-if [[ "$MANIFEST" =~ "robotics-product-sdk" ]]; then
+if [[ "$MANIFEST" =~ "robotics-sdk" ]]; then
    DEBUG_BUILD=1
    QCOM_SELECTED_BSP=custom
 fi
@@ -97,7 +97,7 @@ if [[ "$MANIFEST" =~ "qim-product-sdk" ]]; then
    export EXTRALAYERS="meta-qcom-qim-product-sdk"
 fi
 
-if [[ "$MANIFEST" =~ "robotics-product-sdk" ]]; then
+if [[ "$MANIFEST" =~ "robotics-sdk" ]]; then
    echo "Don't remove: Temp Fix: before Source"
    source setup-robotics-environment
    echo "Don't remove: Temp Fix: After Source"
@@ -112,7 +112,7 @@ if [[ "$MANIFEST" =~ "qim-product-sdk" ]]; then
    time bitbake "$IMAGE"
    time bitbake qcom-qim-product-sdk
    time bitbake -c populate_sdk_ext qcom-multimedia-image && bitbake -c do_populate_sdk qcom-multimedia-image
-elif [[ "$MANIFEST" =~ "robotics-product-sdk" ]]; then
+elif [[ "$MANIFEST" =~ "robotics-sdk" ]]; then
    time ../qirp-build qcom-robotics-full-image
    time bitbake -fc populate_sdk_ext qcom-robotics-full-image
 else
@@ -125,7 +125,7 @@ SUBDIR="${WORKDIR%/*}"
 # copy nhlos notice files
 cp $SUBDIR/scripts/hwe/NO.LOGIN.BINARY.LICENSE.QTI.pdf $WORKDIR
 cp $SUBDIR/scripts/nhlos/NHLOS_NOTICE $WORKDIR
-if [[ "$MANIFEST" =~ "robotics-product-sdk" ]]; then
+if [[ "$MANIFEST" =~ "robotics-sdk" ]]; then
    cp $SUBDIR/scripts/robotics/ROBOTICS_NOTICE $WORKDIR
 fi
 cat $SUBDIR/scripts/hwe/NOTICE >> $WORKDIR/NOTICE
@@ -134,7 +134,7 @@ cat $SUBDIR/scripts/hwe/NOTICE >> $WORKDIR/NOTICE
 cd $WORKDIR
 
 # Append NOTICE file from nologin NHLOS proprietary bins to NOTICE file from nologin HLOS proprietary bins
-if [[ "$MANIFEST" =~ "robotics-product-sdk" ]]; then
+if [[ "$MANIFEST" =~ "robotics-sdk" ]]; then
    cat ROBOTICS_NOTICE >> NOTICE
 fi
 cat NHLOS_NOTICE >> NOTICE
