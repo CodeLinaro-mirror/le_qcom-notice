@@ -83,6 +83,10 @@ time repo sync -c --no-tags -j`nproc`
 # build variables
 MACHINE="$MACHINE"
 DISTRO="$DISTRO"
+
+if [ "$MACHINE" == "qcs615-adp-air" ]; then
+   QCOM_SELECTED_BSP=base
+fi
 if [[ "$MANIFEST" =~ "robotics-sdk" ]]; then
    DEBUG_BUILD=1
    QCOM_SELECTED_BSP=custom
