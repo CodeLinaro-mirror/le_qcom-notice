@@ -43,8 +43,8 @@ END_OF_USAGE
     exit 1
 }
 
-LONG_OPTS="url:,help,branch:,manifest:,machine:,distro:,image:,workdir:,arch:,"
-GETOPT_CMD=$(getopt -o b:d:h:i:m:M:u:w:a: -l $LONG_OPTS -n $(basename $0) -- "$@"
+LONG_OPTS="url:,help,branch:,project:,machine:,distro:,image:,workdir:,arch:,"
+GETOPT_CMD=$(getopt -o b:d:h:i:p:M:u:w:a: -l $LONG_OPTS -n $(basename $0) -- "$@"
 ) || \
             { echo "error parsing options."; echo_usage; }
 
