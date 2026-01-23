@@ -86,3 +86,7 @@ export SHELL=/bin/bash
 
 # Run build
 time kas build meta-qcom/ci/${MACHINE}.yml:meta-qcom/ci/${DISTRO}.yml
+
+pwd
+
+tree
