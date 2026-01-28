@@ -88,5 +88,3 @@ export SHELL=/bin/bash
 time kas build meta-qcom/ci/${MACHINE}.yml:meta-qcom/ci/${DISTRO}.yml
 
 pwd
-
-tree
