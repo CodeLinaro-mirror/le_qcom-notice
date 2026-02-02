@@ -99,4 +99,4 @@ time kas build meta-qcom/ci/qcs615-ride.yml:meta-qcom/ci/${DISTRO}.yml
 
 pwd
 
-tree -L 3 build/tmp/deploy
+tree -L 2 build/tmp/deploy
