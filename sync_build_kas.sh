@@ -76,26 +76,52 @@ cd $WORKDIR
 
 # repo init
 time git clone https://github.com/qualcomm-linux/${PROJECT}.git -b "$BRANCH"
+kas checkout meta-qcom-releases/lock.yml
+
+# kas configuration files need to be part of same repository
+# copy kas lock file to meta-qcom repository
+cp meta-qcom-releases/lock.yml meta-qcom/ci/lock.yml
 
 # build variables
 MACHINE="$MACHINE"
 DISTRO="$DISTRO"
 
+if [[ "$ARCH" =~ "arm" ]]; then
+   export SDKMACHINE="aarch64"
+fi
+
 # setup environment
 export SHELL=/bin/bash
 
 # Run build
-time kas build meta-qcom/ci/${MACHINE}.yml:meta-qcom/ci/${DISTRO}.yml
+time kas build meta-qcom/ci/rb3gen2-core-kit.yml:meta-qcom/ci/${DISTRO}.yml:meta-qcom/ci/lock.yml
 sleep 3
-time kas build meta-qcom/ci/iq-8275-evk.yml:meta-qcom/ci/${DISTRO}.yml
+time kas build meta-qcom/ci/iq-8275-evk.yml:meta-qcom/ci/${DISTRO}.yml:meta-qcom/ci/lock.yml
 sleep 3
-time kas build meta-qcom/ci/iq-9075-evk.yml:meta-qcom/ci/${DISTRO}.yml
+time kas build meta-qcom/ci/iq-9075-evk.yml:meta-qcom/ci/${DISTRO}.yml:meta-qcom/ci/lock.yml
 sleep 3
-time kas build meta-qcom/ci/iq-x7181-evk.yml:meta-qcom/ci/${DISTRO}.yml
-sleep 3
-time kas build meta-qcom/ci/qcom-armv8a.yml:meta-qcom/ci/${DISTRO}.yml
-sleep 3
-time kas build meta-qcom/ci/qcs615-ride.yml:meta-qcom/ci/${DISTRO}.yml
+#time kas build meta-qcom/ci/iq-x7181-evk.yml:meta-qcom/ci/${DISTRO}.yml:meta-qcom/ci/lock.yml
+#sleep 3
+#time kas build meta-qcom/ci/qcom-armv8a.yml:meta-qcom/ci/${DISTRO}.yml:meta-qcom/ci/lock.yml
+#sleep 3
+time kas build meta-qcom/ci/qcs615-ride.yml:meta-qcom/ci/${DISTRO}.yml:meta-qcom/ci/lock.yml
+
+SUBDIR="${WORKDIR%/*}"
+
+# copy nhlos notice files
+cp $SUBDIR/scripts/hwe/NO.LOGIN.BINARY.LICENSE.QTI.pdf $WORKDIR
+cp $SUBDIR/scripts/nhlos/NHLOS_NOTICE $WORKDIR
+cat $SUBDIR/scripts/hwe/NOTICE >> $WORKDIR/NOTICE
+
+# Go to working directory
+cd $WORKDIR
+
+cat NHLOS_NOTICE >> NOTICE
+
+# Get notices related to all the open-source modules that are pulled during build
+NoticeFilesList=`find ./ -type f -iname "Notice" -o -iname "License" -o -iname "Copying" -o -iname "Credits" -o -iname "Patent" -o -iname "copyright" | xargs`
+cat $NoticeFilesList >> NOTICE_OSS
+cat NOTICE_OSS >> NOTICE
 
 pwd
 
