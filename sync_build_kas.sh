@@ -96,15 +96,15 @@ export SHELL=/bin/bash
 # Run build
 time kas build meta-qcom/ci/rb3gen2-core-kit.yml:meta-qcom/ci/${DISTRO}.yml:meta-qcom/ci/lock.yml
 sleep 3
-time kas build meta-qcom/ci/iq-8275-evk.yml:meta-qcom/ci/${DISTRO}.yml:meta-qcom/ci/lock.yml
-sleep 3
-time kas build meta-qcom/ci/iq-9075-evk.yml:meta-qcom/ci/${DISTRO}.yml:meta-qcom/ci/lock.yml
-sleep 3
+#time kas build meta-qcom/ci/iq-8275-evk.yml:meta-qcom/ci/${DISTRO}.yml:meta-qcom/ci/lock.yml
+#sleep 3
+#time kas build meta-qcom/ci/iq-9075-evk.yml:meta-qcom/ci/${DISTRO}.yml:meta-qcom/ci/lock.yml
+#sleep 3
 #time kas build meta-qcom/ci/iq-x7181-evk.yml:meta-qcom/ci/${DISTRO}.yml:meta-qcom/ci/lock.yml
 #sleep 3
 #time kas build meta-qcom/ci/qcom-armv8a.yml:meta-qcom/ci/${DISTRO}.yml:meta-qcom/ci/lock.yml
 #sleep 3
-time kas build meta-qcom/ci/qcs615-ride.yml:meta-qcom/ci/${DISTRO}.yml:meta-qcom/ci/lock.yml
+#time kas build meta-qcom/ci/qcs615-ride.yml:meta-qcom/ci/${DISTRO}.yml:meta-qcom/ci/lock.yml
 
 SUBDIR="${WORKDIR%/*}"
 
@@ -125,4 +125,4 @@ cat NOTICE_OSS >> NOTICE
 
 pwd
 
-tree -L 2 build/tmp/deploy
+tree -L 3 build/tmp/deploy || true
