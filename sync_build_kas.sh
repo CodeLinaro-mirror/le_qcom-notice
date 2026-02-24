@@ -104,7 +104,7 @@ time kas build meta-qcom/ci/iq-615-evk.yml:meta-qcom/ci/${DISTRO}.yml:meta-qcom/
 sleep 3
 time kas build meta-qcom/ci/qcom-armv8a.yml:meta-qcom/ci/${DISTRO}.yml:meta-qcom/ci/lock.yml
 
-kas shell meta-qcom/ci/qcom-armv8a.yml:meta-qcom/ci/${DISTRO}.yml:meta-qcom/ci/lock.yml -c "bitbake -c populate_sdk qcom-multimedia-proprietary-image && bitbake -c populate_sdk_ext qcom-multimedia-proprietary-image"
+#kas shell meta-qcom/ci/qcom-armv8a.yml:meta-qcom/ci/${DISTRO}.yml:meta-qcom/ci/lock.yml -c "bitbake -c populate_sdk qcom-multimedia-proprietary-image && bitbake -c populate_sdk_ext qcom-multimedia-proprietary-image"
 
 SUBDIR="${WORKDIR%/*}"
 
