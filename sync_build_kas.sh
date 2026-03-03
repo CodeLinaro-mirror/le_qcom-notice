@@ -102,9 +102,9 @@ export SHELL=/bin/bash
 #sleep 3
 #time kas build meta-qcom/ci/iq-615-evk.yml:meta-qcom/ci/${DISTRO}.yml:meta-qcom/ci/linux-qcom-6.18.yml:meta-qcom/ci/lock.yml
 #sleep 3
-time kas build meta-qcom/ci/qcom-armv8a.yml:meta-qcom/ci/${DISTRO}.yml:meta-qcom/ci/mirror-tarballs.yml:meta-qcom/ci/linux-qcom-6.18.yml:meta-qcom/ci/lock.yml
-sleep 3
-kas shell meta-qcom/ci/qcom-armv8a.yml:meta-qcom/ci/${DISTRO}.yml:meta-qcom/ci/mirror-tarballs.yml:meta-qcom/ci/linux-qcom-6.18.yml:meta-qcom/ci/lock.yml -c "bitbake -c populate_sdk qcom-multimedia-proprietary-image && bitbake -c populate_sdk_ext qcom-multimedia-proprietary-image"
+#time kas build meta-qcom/ci/qcom-armv8a.yml:meta-qcom/ci/${DISTRO}.yml:meta-qcom/ci/mirror-tarballs.yml:meta-qcom/ci/linux-qcom-6.18.yml:meta-qcom/ci/lock.yml
+#sleep 3
+#kas shell meta-qcom/ci/qcom-armv8a.yml:meta-qcom/ci/${DISTRO}.yml:meta-qcom/ci/mirror-tarballs.yml:meta-qcom/ci/linux-qcom-6.18.yml:meta-qcom/ci/lock.yml -c "bitbake -c populate_sdk qcom-multimedia-proprietary-image && bitbake -c populate_sdk_ext qcom-multimedia-proprietary-image"
 
 SUBDIR="${WORKDIR%/*}"
 
@@ -125,4 +125,4 @@ cat NOTICE_OSS >> NOTICE
 
 pwd
 
-tree -L 2 build/tmp/deploy || true
+#tree -L 2 build/tmp/deploy || true
