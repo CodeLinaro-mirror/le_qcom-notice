@@ -27,6 +27,9 @@ Usage:
         -M, --machine
             machine (Eg: qcm6490)
 
+        -D, --downloadderver
+            0 or 1 (Eg: 1 to host downloads)
+
         -d, --distro
             Distro (Eg: qcom-wayland)
 
@@ -44,7 +47,7 @@ END_OF_USAGE
 }
 
 LONG_OPTS="url:,help,branch:,project:,machine:,distro:,downloadserver:,image:,workdir:,arch:,"
-GETOPT_CMD=$(getopt -o b:d:h:i:p:M:u:w:a: -l $LONG_OPTS -n $(basename $0) -- "$@"
+GETOPT_CMD=$(getopt -o b:d:D:h:i:p:M:u:w:a: -l $LONG_OPTS -n $(basename $0) -- "$@"
 ) || \
             { echo "error parsing options."; echo_usage; }
 
@@ -59,7 +62,7 @@ while true; do
        -M|--machine) MACHINE="$2"; shift ;;
        -d|--distro) DISTRO="$2"; shift ;;
        -i|--image) IMAGE="$2"; shift ;;
-       -f|--downloadserver) DOWNLOADSERVER="$2"; shift ;;
+       -D|--downloadserver) DOWNLOADSERVER="$2"; shift ;;
        -w|--workdir) WORKDIR="$2"; shift ;;
        -a|--arch) ARCH="$2"; shift ;;
        --) shift ; break ;;
@@ -96,9 +99,9 @@ if [[ "$ARCH" =~ "arm" ]]; then
 else
    echo "Compile for all targets for distro: prop-image"
    if [ "$DOWNLOADSERVER" == 1 ]; then
-      echo "execute downloads"
+      echo "execute downloads, $DISTRO: $DOWNLOADSERVER"
    else
-      echo "genric x86"
+      echo "genric x86, $DISTRO: $DOWNLOADSERVER"
    fi
 fi
 
