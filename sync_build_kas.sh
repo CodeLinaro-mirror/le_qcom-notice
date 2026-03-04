@@ -43,7 +43,7 @@ END_OF_USAGE
     exit 1
 }
 
-LONG_OPTS="url:,help,branch:,project:,machine:,distro:,image:,workdir:,arch:,"
+LONG_OPTS="url:,help,branch:,project:,machine:,distro:,downloadserver:,image:,workdir:,arch:,"
 GETOPT_CMD=$(getopt -o b:d:h:i:p:M:u:w:a: -l $LONG_OPTS -n $(basename $0) -- "$@"
 ) || \
             { echo "error parsing options."; echo_usage; }
@@ -59,6 +59,7 @@ while true; do
        -M|--machine) MACHINE="$2"; shift ;;
        -d|--distro) DISTRO="$2"; shift ;;
        -i|--image) IMAGE="$2"; shift ;;
+       -f|--downloadserver) DOWNLOADSERVER="$2"; shift ;;
        -w|--workdir) WORKDIR="$2"; shift ;;
        -a|--arch) ARCH="$2"; shift ;;
        --) shift ; break ;;
@@ -88,6 +89,17 @@ DISTRO="$DISTRO"
 
 if [[ "$ARCH" =~ "arm" ]]; then
    export SDKMACHINE="aarch64"
+fi
+
+if [[ "$ARCH" =~ "arm" ]]; then
+   echo "Compile for Generic target, compile eSDK and standard SDK for generic target"
+else
+   echo "Compile for all targets for distro: prop-image"
+   if [ "$DOWNLOADSERVER" == 1 ]; then
+      echo "execute downloads"
+   else
+      echo "genric x86"
+   fi
 fi
 
 # setup environment
