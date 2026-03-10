@@ -108,6 +108,7 @@ if [[ "$MANIFEST" =~ "robotics-sdk" ]]; then
 else
    echo "Don't remove: Temp Fix: before Source"
    source setup-environment
+   sed -i 's/BB_GENERATE_MIRROR_TARBALLS *= *"0"/BB_GENERATE_MIRROR_TARBALLS = "1"/' conf/local.conf
    echo "Don't remove: Temp Fix: After Source"
 fi
 
@@ -120,10 +121,12 @@ elif [[ "$MANIFEST" =~ "robotics-sdk" ]]; then
    time ../qirp-build qcom-robotics-full-image
    time bitbake -fc populate_sdk_ext qcom-robotics-full-image
 else
-   time bitbake "$IMAGE"
-   time bitbake -c populate_sdk_ext qcom-multimedia-image && bitbake -c do_populate_sdk qcom-multimedia-image
+   time bitbake "$IMAGE" --runonly=fetch
+   exit 0
+   #time bitbake "$IMAGE"
+   #time bitbake -c populate_sdk_ext qcom-multimedia-image && bitbake -c do_populate_sdk qcom-multimedia-image
 fi
-
+exit 0
 SUBDIR="${WORKDIR%/*}"
 
 # copy nhlos notice files
