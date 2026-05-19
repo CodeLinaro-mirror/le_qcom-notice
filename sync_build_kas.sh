@@ -118,8 +118,8 @@ else
       time kas build meta-qcom/ci/iq-9075-evk.yml:meta-qcom/ci/${DISTRO}.yml:meta-qcom/ci/linux-qcom-6.18.yml:meta-qcom/ci/performance.yml:meta-qcom/ci/lock.yml
       sleep 3
       time kas build meta-qcom/ci/iq-615-evk.yml:meta-qcom/ci/${DISTRO}.yml:meta-qcom/ci/linux-qcom-6.18.yml:meta-qcom/ci/performance.yml:meta-qcom/ci/lock.yml
-      sleep 3
-      time kas build meta-qcom/ci/iq-x7181-evk.yml:meta-qcom/ci/${DISTRO}.yml:meta-qcom/ci/linux-qcom-6.18.yml:meta-qcom/ci/performance.yml:meta-qcom/ci/lock.yml
+      #sleep 3
+      #time kas build meta-qcom/ci/iq-x7181-evk.yml:meta-qcom/ci/${DISTRO}.yml:meta-qcom/ci/linux-qcom-6.18.yml:meta-qcom/ci/performance.yml:meta-qcom/ci/lock.yml
       sleep 3
       time kas build meta-qcom/ci/qcom-armv8a.yml:meta-qcom/ci/${DISTRO}.yml:meta-qcom/ci/mirror-tarballs.yml:meta-qcom/ci/linux-qcom-6.18.yml:meta-qcom/ci/performance.yml:meta-qcom/ci/lock.yml
       sleep 3
