@@ -126,7 +126,6 @@ else
    #time bitbake "$IMAGE"
    #time bitbake -c populate_sdk_ext qcom-multimedia-image && bitbake -c do_populate_sdk qcom-multimedia-image
 fi
-exit 0
 SUBDIR="${WORKDIR%/*}"
 
 # copy nhlos notice files
