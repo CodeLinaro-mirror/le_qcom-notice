@@ -97,33 +97,35 @@ fi
 if [[ "$ARCH" =~ "arm" ]]; then
    DISTRO="qcom-distro"
    echo "Architecture is $ARCH: Compile for Generic target, compile eSDK and standard SDK for generic target, distro=$DISTRO"
-   time kas build meta-qcom/ci/qcom-armv8a.yml:meta-qcom/ci/${DISTRO}.yml:meta-qcom/ci/mirror-tarballs.yml:meta-qcom/ci/linux-qcom-6.18.yml:meta-qcom/ci/performance.yml:meta-qcom/ci/lock.yml
+   time kas build meta-qcom/ci/qcom-armv8a.yml:meta-qcom/ci/${DISTRO}.yml:meta-qcom/ci/mirror-tarballs.yml:meta-qcom/ci/linux-qcom-6.18.yml:meta-qcom/ci/performance.yml
    sleep 3
-   kas shell meta-qcom/ci/qcom-armv8a.yml:meta-qcom/ci/${DISTRO}.yml:meta-qcom/ci/mirror-tarballs.yml:meta-qcom/ci/linux-qcom-6.18.yml:meta-qcom/ci/performance.yml:meta-qcom/ci/lock.yml -c "bitbake -c populate_sdk qcom-multimedia-proprietary-image && bitbake -c populate_sdk_ext qcom-multimedia-proprietary-image"
+   kas shell meta-qcom/ci/qcom-armv8a.yml:meta-qcom/ci/${DISTRO}.yml:meta-qcom/ci/mirror-tarballs.yml:meta-qcom/ci/linux-qcom-6.18.yml:meta-qcom/ci/performance.yml -c "bitbake -c populate_sdk qcom-multimedia-proprietary-image && bitbake -c populate_sdk_ext qcom-multimedia-proprietary-image"
 else
    if [ "$DOWNLOADSERVER" == 1 ]; then
       DISTRO="qcom-distro-catchall"
       echo "Architecture is $ARCH: Compile for Generic target, distro $DISTRO for downloads hosting"
-      time kas build meta-qcom/ci/qcom-armv8a.yml:meta-qcom/ci/${DISTRO}.yml:meta-qcom/ci/mirror-tarballs.yml:meta-qcom/ci/linux-qcom-6.18.yml:meta-qcom/ci/performance.yml:meta-qcom/ci/lock.yml
+      time kas build meta-qcom/ci/qcom-armv8a.yml:meta-qcom/ci/${DISTRO}.yml:meta-qcom/ci/mirror-tarballs.yml:meta-qcom/ci/linux-qcom-6.18.yml:meta-qcom/ci/performance.yml
       sleep 3
-      kas shell meta-qcom/ci/qcom-armv8a.yml:meta-qcom/ci/${DISTRO}.yml:meta-qcom/ci/mirror-tarballs.yml:meta-qcom/ci/linux-qcom-6.18.yml:meta-qcom/ci/lock.yml -c "bitbake -c populate_sdk qcom-multimedia-proprietary-image && bitbake -c populate_sdk_ext qcom-multimedia-proprietary-image"
+      kas shell meta-qcom/ci/qcom-armv8a.yml:meta-qcom/ci/${DISTRO}.yml:meta-qcom/ci/mirror-tarballs.yml:meta-qcom/ci/linux-qcom-6.18.yml -c "bitbake -c populate_sdk qcom-multimedia-proprietary-image && bitbake -c populate_sdk_ext qcom-multimedia-proprietary-image"
    else
       DISTRO="qcom-distro"
       echo "Architecture is $ARCH: Compile for all applicable targets (KLMT), compile eSDK and standard SDK for generic target, distro=$DISTRO"
       # Run build
-      #time kas build meta-qcom/ci/rb3gen2-core-kit.yml:meta-qcom/ci/${DISTRO}.yml:meta-qcom/ci/linux-qcom-6.18.yml:meta-qcom/ci/performance.yml:meta-qcom/ci/lock.yml
+      time kas build meta-qcom/ci/rb3gen2-core-kit.yml:meta-qcom/ci/${DISTRO}.yml:meta-qcom/ci/linux-qcom-6.18.yml:meta-qcom/ci/performance.yml:meta-qcom/ci/lock.yml
       #sleep 3
-      #time kas build meta-qcom/ci/iq-8275-evk.yml:meta-qcom/ci/${DISTRO}.yml:meta-qcom/ci/linux-qcom-6.18.yml:meta-qcom/ci/performance.yml:meta-qcom/ci/lock.yml
+      #time kas build meta-qcom/ci/iq-8275-evk.yml:meta-qcom/ci/${DISTRO}.yml:meta-qcom/ci/linux-qcom-6.18.yml:meta-qcom/ci/performance.yml
       #sleep 3
-      #time kas build meta-qcom/ci/iq-9075-evk.yml:meta-qcom/ci/${DISTRO}.yml:meta-qcom/ci/linux-qcom-6.18.yml:meta-qcom/ci/performance.yml:meta-qcom/ci/lock.yml
+      #time kas build meta-qcom/ci/iq-9075-evk.yml:meta-qcom/ci/${DISTRO}.yml:meta-qcom/ci/linux-qcom-6.18.yml:meta-qcom/ci/performance.yml
       #sleep 3
-      #time kas build meta-qcom/ci/iq-615-evk.yml:meta-qcom/ci/${DISTRO}.yml:meta-qcom/ci/linux-qcom-6.18.yml:meta-qcom/ci/performance.yml:meta-qcom/ci/lock.yml
-      sleep 3
-      time kas build meta-qcom/ci/iq-x7181-evk.yml:meta-qcom/ci/${DISTRO}.yml:meta-qcom/ci/linux-qcom-6.18.yml:meta-qcom/ci/performance.yml:meta-qcom/ci/lock.yml
-      sleep 3
-      time kas build meta-qcom/ci/qcom-armv8a.yml:meta-qcom/ci/${DISTRO}.yml:meta-qcom/ci/mirror-tarballs.yml:meta-qcom/ci/linux-qcom-6.18.yml:meta-qcom/ci/performance.yml:meta-qcom/ci/lock.yml
-      sleep 3
-      kas shell meta-qcom/ci/qcom-armv8a.yml:meta-qcom/ci/${DISTRO}.yml:meta-qcom/ci/mirror-tarballs.yml:meta-qcom/ci/linux-qcom-6.18.yml:meta-qcom/ci/performance.yml:meta-qcom/ci/lock.yml -c "bitbake -c populate_sdk qcom-multimedia-proprietary-image && bitbake -c populate_sdk_ext qcom-multimedia-proprietary-image"
+      #time kas build meta-qcom/ci/iq-615-evk.yml:meta-qcom/ci/${DISTRO}.yml:meta-qcom/ci/linux-qcom-6.18.yml:meta-qcom/ci/performance.yml
+      #sleep 3
+      #time kas build meta-qcom/ci/iq-x7181-evk.yml:meta-qcom/ci/${DISTRO}.yml:meta-qcom/ci/linux-qcom-6.18.yml:meta-qcom/ci/performance.yml
+      #sleep 3
+      #time kas build meta-qcom/ci/iq-x5121-evk.yml:meta-qcom/ci/${DISTRO}.yml:meta-qcom/ci/linux-qcom-6.18.yml:meta-qcom/ci/performance.yml
+      #sleep 3
+      #time kas build meta-qcom/ci/qcom-armv8a.yml:meta-qcom/ci/${DISTRO}.yml:meta-qcom/ci/mirror-tarballs.yml:meta-qcom/ci/linux-qcom-6.18.yml:meta-qcom/ci/performance.yml
+      #sleep 3
+      #kas shell meta-qcom/ci/qcom-armv8a.yml:meta-qcom/ci/${DISTRO}.yml:meta-qcom/ci/mirror-tarballs.yml:meta-qcom/ci/linux-qcom-6.18.yml:meta-qcom/ci/performance.yml -c "bitbake -c populate_sdk qcom-multimedia-proprietary-image && bitbake -c populate_sdk_ext qcom-multimedia-proprietary-image"
    fi
 fi
 
@@ -149,6 +151,8 @@ SUBDIR="${WORKDIR%/*}"
 cp $SUBDIR/scripts/hwe/NO.LOGIN.BINARY.LICENSE.QTI.pdf $WORKDIR
 cp $SUBDIR/scripts/nhlos/NHLOS_NOTICE $WORKDIR
 cat $SUBDIR/scripts/hwe/NOTICE >> $WORKDIR/NOTICE
+
+$SUBDIR/scripts/prune_rpm.sh --image-dir "$WORKDIR/build/tmp/deploy/images" --repo-dir "$WORKDIR/build/tmp/deploy/rpm" --outdir "$WORKDIR/output" --workdir "$WORKDIR"
 
 # Go to working directory
 cd $WORKDIR
