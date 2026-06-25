@@ -1,11 +1,10 @@
 #!/usr/bin/env bash
 set -euo pipefail
 ###############################################################################
-# prune_and_push_rpms.sh (PRODUCTION-READY - Complete RPM resolver)
-# OPTIMIZED VERSION - Fast RPM discovery with caching
+# prune_and_push_rpms.sh (FULLY EMBEDDED - Complete RPM resolver from resolver.py)
 #
-# 1) Auto-discover manifest pairs from root image directory
-# 2) Compute diffs per target, resolve deps (full transitive closure)
+# 1) Auto-discover manifest pairs from a root image directory
+# 2) Compute diffs per target, resolve deps (full transitive closure via resolver.py logic)
 # 3) Copy RPMs intelligently (armv8_2a vs target-specific)
 # 4) Build deps.xlsx with per-target sheets
 # 5) Optionally push to Artifactory
@@ -30,12 +29,10 @@ _log(){
     printf "[%s] [%-7s] %s\n" "$ts" "$lvl" "$*" >> "$LOG_FILE" || true
   fi
 }
-
 die()    { _log "ERROR"   "$RED"    "$*"; exit 1; }
 warn()   { _log "WARN"    "$YELLOW" "$*"; }
 note()   { _log "INFO"    "$CYAN"   "$*"; }
 ok()     { _log "OK"      "$GREEN"  "$*"; }
-
 header() {
   echo -e "\n${BOLD}${CYAN}══════════════════════════════════════════${RESET}" >&2
   echo -e "${BOLD}${CYAN}  $*${RESET}" >&2
@@ -66,19 +63,12 @@ ${BOLD}Global options:${RESET}
   --no-copy              Skip RPM copy step
   --dry-run              Show what would happen without doing it
   --push                 Enable push to Artifactory
-  --arti-url      URL    Artifactory URL
-  --arti-repo     REPO   Artifactory repo name
-  --arti-path     PATH   Artifactory path
-  --arti-user     USER   Artifactory username
-  --arti-token    TOKEN  Artifactory token
   -h|--help              Show this help
 USAGE
 }
 
-# ─── Requirements (checked early) ──────────────────────────────────────────────
-for _cmd in sed grep sort python3 find cp wc date timeout curl; do 
-  need "$_cmd"
-done
+# ─── Requirements ─────────────────────────────────────────────────────────────
+for _cmd in sed grep sort python3 find cp wc date; do need "$_cmd"; done
 
 # ─── Defaults ─────────────────────────────────────────────────────────────────
 WORKDIR="./manifest_compare_out"
@@ -100,7 +90,6 @@ IMAGE_DIR=""
 TARGET_NAMES=()
 TARGET_A=()
 TARGET_B=()
-armv8_2a_ARCH_DIRS=()
 
 # ─── Argument Parsing ─────────────────────────────────────────────────────────
 while [[ $# -gt 0 ]]; do
@@ -125,19 +114,9 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-# ─── Early Validation ──────────────────────────────────────────────────────────
-[[ -z "$REPO_DIR" ]] && die "--repo-dir is required"
-[[ -d "$REPO_DIR" ]] || die "Repo dir not found: $REPO_DIR"
-
-# Parse architecture directories
-OLD_IFS="$IFS"
-IFS=':' read -ra armv8_2a_ARCH_DIRS <<< "$armv8_2a_ARCHES" || die "Failed to parse --armv8_2a-arches"
-IFS="$OLD_IFS"
-
 # ─── Setup ────────────────────────────────────────────────────────────────────
-mkdir -p "$WORKDIR" "$OUTDIR" || die "Failed to create working directories"
+mkdir -p "$WORKDIR" "$OUTDIR"
 LOG_FILE="$WORKDIR/run_$(date '+%Y%m%d_%H%M%S').log"
-touch "$LOG_FILE" || die "Failed to create log file: $LOG_FILE"
 note "Logging to: $LOG_FILE"
 
 # ─── Auto-discover manifests ──────────────────────────────────────────────────
@@ -177,7 +156,7 @@ discover_manifests(){
       break
     done < <(find -L "$tgt_dir" -maxdepth 1 -type f -name "*multimedia*.rootfs.manifest" 2>/dev/null | sort)
 
-    [[ -z "$man_a" || -z "$man_b" ]] && { warn "[$tgt] Missing manifest pair - skipping"; continue; }
+    [[ -z "$man_a" || -z "$man_b" ]] && { warn "[$tgt] Missing manifests"; continue; }
 
     TARGET_NAMES+=("$tgt")
     TARGET_A+=("$man_a")
@@ -191,13 +170,16 @@ discover_manifests(){
 
 [[ -n "$IMAGE_DIR" ]] && discover_manifests "$IMAGE_DIR"
 [[ ${#TARGET_NAMES[@]} -eq 0 ]] && die "No targets defined"
+[[ -d "$REPO_DIR" ]] || die "Repo dir not found: $REPO_DIR"
 
-# ─── EMBEDDED: Full RPM Resolver ──────────────────────────────────────────────
+IFS=':' read -ra armv8_2a_ARCH_DIRS <<< "$armv8_2a_ARCHES"
+
+# ─── EMBEDDED: Full RPM Resolver (from resolver.py) ──────────────────────────
 resolve_dependencies() {
   local targets_file="$1" output_csv="$2" label="$3"
   
   if [[ ! -s "$targets_file" ]]; then
-    warn "$label: diff empty — writing empty CSV"
+    warn "$label: diff empty — writing empty CSV."
     python3 - "$output_csv" <<'PY'
 import csv, sys
 hdr = ["Target Package","Needed Package","Needed EVR","Architecture","Provided Virtuals","Location Href","Source Repo"]
@@ -207,7 +189,7 @@ PY
     return 0
   fi
 
-  note "$label: resolving $(wc -l < "$targets_file") packages"
+  note "$label: resolving $(wc -l < "$targets_file") packages …"
 
   python3 - "$REPO_DIR" "$targets_file" "$output_csv" "$PREFER_ARCH" <<'RESOLVER_PY'
 import csv, sys, os, re, gzip, io, subprocess, xml.etree.ElementTree as ET
@@ -240,11 +222,8 @@ def decompress_zst(data):
         return b"".join(chunks)
     except:
         try:
-            p = subprocess.run(["zstd", "-d", "-c", "-q"], input=data, stdout=subprocess.PIPE, timeout=30, check=False)
+            p = subprocess.run(["zstd", "-d", "-c", "-q"], input=data, stdout=subprocess.PIPE, check=False)
             return p.stdout
-        except subprocess.TimeoutExpired:
-            print(f"WARNING: zstd timeout", file=sys.stderr)
-            return data
         except:
             return data
 
@@ -337,8 +316,9 @@ def parse_primary_xml(primary_path, repo_id):
     
     return pkgs
 
+# Discover and parse all repos
 all_pkgs = {}
-providers_map = defaultdict(list)
+providers_map = defaultdict(set)
 
 for root, dirs, files in os.walk(repo_dir):
     if "repodata" in dirs:
@@ -352,20 +332,17 @@ for root, dirs, files in os.walk(repo_dir):
                 if name not in all_pkgs:
                     all_pkgs[name] = info
                 for prov in info["provides"]:
-                    if name not in providers_map[prov]:
-                        providers_map[prov].append(name)
+                    providers_map[prov].add(name)
 
+# Load targets
 targets = set()
-try:
-    with open(targets_file) as f:
-        for line in f:
-            s = line.strip()
-            if s and not s.startswith("#"):
-                targets.add(s)
-except IOError as e:
-    print(f"ERROR: Cannot read targets file {targets_file}: {e}", file=sys.stderr)
-    raise
+with open(targets_file) as f:
+    for line in f:
+        s = line.strip()
+        if s and not s.startswith("#"):
+            targets.add(s)
 
+# Resolve dependencies (BFS - full transitive closure)
 def resolve_deps(root_pkg):
     needed = set()
     visited = set()
@@ -379,10 +356,8 @@ def resolve_deps(root_pkg):
         
         for dep in all_pkgs[current].get("depends", []):
             if dep in providers_map:
-                candidates = providers_map[dep]
-                provider = dep if dep in candidates else sorted(candidates)[0]
-                
-                if provider and provider not in visited:
+                provider = sorted(providers_map[dep])[0]
+                if provider not in visited:
                     visited.add(provider)
                     if provider != root_pkg:
                         needed.add(provider)
@@ -390,6 +365,7 @@ def resolve_deps(root_pkg):
     
     return needed
 
+# Write output
 rows = []
 for tgt in sorted(targets):
     deps = resolve_deps(tgt)
@@ -414,21 +390,19 @@ with open(output_csv, "w", newline="", encoding="utf-8") as f:
         writer.writerow(r)
 RESOLVER_PY
 
-  [[ $? -eq 0 ]] || die "Resolver failed for $label"
-  ok "$label: resolver finished"
+  ok "$label: resolver finished → $output_csv"
 }
-
 # ─── Per-target: normalise, diff, resolve, extract ────────────────────────────
 for i in "${!TARGET_NAMES[@]}"; do
   TGT="${TARGET_NAMES[$i]}"
   TGT_DIR="$WORKDIR/$TGT"
-  mkdir -p "$TGT_DIR" || die "Failed to create $TGT_DIR"
+  mkdir -p "$TGT_DIR"
 
   header "[$TGT] Step 1/3 — Normalise & Diff"
   A_NORM="$TGT_DIR/A.normalized.txt"
   B_NORM="$TGT_DIR/B.normalized.txt"
-  sed 's/[[:space:]].*$//' "${TARGET_A[$i]}" | sed '/^[[:space:]]*$/d' | sort -u > "$A_NORM" || die "Failed to normalize A manifest: ${TARGET_A[$i]}"
-  sed 's/[[:space:]].*$//' "${TARGET_B[$i]}" | sed '/^[[:space:]]*$/d' | sort -u > "$B_NORM" || die "Failed to normalize B manifest: ${TARGET_B[$i]}"
+  sed 's/[[:space:]].*$//' "${TARGET_A[$i]}" | sed '/^[[:space:]]*$/d' | sort -u > "$A_NORM"
+  sed 's/[[:space:]].*$//' "${TARGET_B[$i]}" | sed '/^[[:space:]]*$/d' | sort -u > "$B_NORM"
   ok "$TGT: A → $(wc -l < "$A_NORM") pkgs   B → $(wc -l < "$B_NORM") pkgs"
 
   A_MINUS_B="$TGT_DIR/difference_A_minus_B.txt"
@@ -455,30 +429,20 @@ deps_a, deps_b, diff_a, diff_b, out_all, tgt = sys.argv[1:]
 def extract_csv(csv_path):
     pkgs = set()
     p = Path(csv_path)
-    if not p.exists(): 
-        return pkgs
-    try:
-        with p.open(newline="", encoding="utf-8", errors="ignore") as f:
-            reader = csv.reader(f)
-            next(reader, None)
-            for row in reader:
-                if row and len(row) >= 2:
-                    pkgs.add(row[0])
-                    pkgs.add(row[1])
-    except Exception as e:
-        print(f"Error reading {csv_path}: {e}", file=sys.stderr)
-        raise
+    if not p.exists(): return pkgs
+    with p.open(newline="", encoding="utf-8", errors="ignore") as f:
+        reader = csv.reader(f)
+        next(reader, None)  # skip header
+        for row in reader:
+            if row and len(row) >= 2:
+                pkgs.add(row[0])
+                pkgs.add(row[1])
     return pkgs
 
 def read_lines(path):
     p = Path(path)
-    if not p.exists(): 
-        return set()
-    try:
-        return {l.strip() for l in p.read_text().splitlines() if l.strip()}
-    except Exception as e:
-        print(f"Error reading {path}: {e}", file=sys.stderr)
-        raise
+    if not p.exists(): return set()
+    return {l.strip() for l in p.read_text().splitlines() if l.strip()}
 
 a = extract_csv(deps_a)
 b = extract_csv(deps_b)
@@ -497,23 +461,20 @@ write_sorted(out_all, allp)
 print(f"  [{tgt}] total={len(allp)}")
 PY
 
-  [[ $? -eq 0 ]] || die "Failed to extract packages for $TGT"
-  ok "$TGT: package lists written"
+  ok "$TGT: package lists written."
 done
 
 # ─── Split armv8_2a vs target-specific ──────────────────────────────────────────
 header "Splitting armv8_2a vs Target-Specific"
 
-TARGET_NAMES_STR=$(IFS='|'; echo "${TARGET_NAMES[*]}")
-
-python3 - "$WORKDIR" "$REPO_DIR" "$armv8_2a_ARCHES" "$TARGET_NAMES_STR" <<'PY'
-import sys, subprocess, os, re
+python3 - "$WORKDIR" "$REPO_DIR" "$armv8_2a_ARCHES" "${TARGET_NAMES[@]}" <<'PY'
+import sys, subprocess, os
 from pathlib import Path
 
 workdir = sys.argv[1]
 repo_dir = sys.argv[2]
 armv8_2a_arches = sys.argv[3].split(":")
-targets = sys.argv[4].split("|")
+targets = sys.argv[4:]
 repo_path = Path(repo_dir)
 
 armv8_2a_dirs = [str(repo_path / a) for a in armv8_2a_arches if (repo_path / a).is_dir()]
@@ -524,47 +485,37 @@ for t in targets:
     if repo_subdir.is_dir():
         target_repo_dirs[t] = str(repo_subdir)
 
-print(f"  armv8_2a arch dirs: {armv8_2a_dirs}")
-print(f"  Target repo dirs: {target_repo_dirs}")
-
-def escape_regex_chars(s):
-    return re.escape(s)
+print(f"  armv8_2a arch dirs  : {armv8_2a_dirs}")
+print(f"  Target repo dirs  : {target_repo_dirs}")
 
 def find_rpms_in_dirs(pkg, search_dirs):
     found = []
     for d in search_dirs:
         if not Path(d).is_dir():
             continue
-        escaped_pkg = escape_regex_chars(pkg)
-        try:
-            r = subprocess.run(
-                ["find", "-L", d, "-type", "f", "-regextype", "posix-extended",
-                 "-regex", f".*/{escaped_pkg}-[0-9].*\\.rpm"],
-                capture_output=True, text=True, timeout=30)
-            found += [p for p in r.stdout.strip().splitlines() if p.strip()]
-        except subprocess.TimeoutExpired:
-            print(f"  ERROR: find timeout in {d}", file=sys.stderr)
-            raise
-        except Exception as e:
-            print(f"  ERROR: find failed in {d}: {e}", file=sys.stderr)
-            raise
+        r = subprocess.run(
+            ["find", "-L", d, "-type", "f", "-regextype", "posix-extended",
+             "-regex", f".*/{pkg}-[0-9].*\\.rpm"],
+            capture_output=True, text=True)
+        found += [p for p in r.stdout.strip().splitlines() if p.strip()]
     return sorted(found)
 
 target_pkgs = {}
 for tgt in targets:
     pkgs_all = Path(workdir) / tgt / "pkgs_all.txt"
-    if not pkgs_all.exists():
-        raise FileNotFoundError(f"Missing {pkgs_all}")
-    target_pkgs[tgt] = set(l.strip() for l in pkgs_all.read_text().splitlines() if l.strip())
-    print(f"  [{tgt}] pkgs_all: {len(target_pkgs[tgt])}")
+    if pkgs_all.exists():
+        target_pkgs[tgt] = set(l.strip() for l in pkgs_all.read_text().splitlines() if l.strip())
+    else:
+        target_pkgs[tgt] = set()
+    print(f"  [{tgt}] pkgs_all count: {len(target_pkgs[tgt])}")
 
 all_pkgs = set()
 for pkgs in target_pkgs.values():
     all_pkgs |= pkgs
-print(f"  Total unique: {len(all_pkgs)}")
+print(f"  Total unique pkgs: {len(all_pkgs)}")
 
 if not target_repo_dirs:
-    print(f"  No target-specific repos - treating ALL as armv8_2a")
+    print(f"  ⚠️  No target-specific repo dirs — treating ALL as armv8_2a")
     armv8_2a_pkgs = all_pkgs
     per_target_specific = {t: set() for t in targets}
 else:
@@ -586,34 +537,31 @@ ws(Path(workdir) / "pkgs_armv8_2a.txt", armv8_2a_pkgs)
 print(f"  [global] armv8_2a: {len(armv8_2a_pkgs)}")
 
 for tgt in targets:
+    tgt_dir = Path(workdir) / tgt
     specific = per_target_specific[tgt]
-    ws(Path(workdir) / tgt / "pkgs_target_specific.txt", specific)
-    print(f"  [{tgt}] specific: {len(specific)}")
+    ws(tgt_dir / "pkgs_target_specific.txt", specific)
+    print(f"  [{tgt}] specific={len(specific)}")
 PY
 
-[[ $? -eq 0 ]] || die "Failed to split packages"
-ok "Split complete"
+ok "Split complete."
 
 # ─── Build deps.xlsx ──────────────────────────────────────────────────────────
 if ! $NO_XLSX; then
   header "Build deps.xlsx"
   XLSX_OUT="$WORKDIR/deps.xlsx"
-  
-  TARGET_NAMES_STR=$(IFS='|'; echo "${TARGET_NAMES[*]}")
-  
-  python3 - "$WORKDIR" "$XLSX_OUT" "$TARGET_NAMES_STR" <<'PY'
+  python3 - "$WORKDIR" "$XLSX_OUT" "${TARGET_NAMES[@]}" <<'PY'
 import csv, sys
 from pathlib import Path
 
 workdir, xlsx_out = sys.argv[1], sys.argv[2]
-targets = sys.argv[3].split("|")
+targets = sys.argv[3:]
 
 try:
     from openpyxl import Workbook
     from openpyxl.styles import Font, PatternFill, Alignment
     from openpyxl.utils import get_column_letter
 except ImportError:
-    print("WARN: openpyxl not installed - skipping xlsx", file=sys.stderr)
+    print("WARN: openpyxl not installed — skipping deps.xlsx")
     raise SystemExit(0)
 
 HFILL = PatternFill("solid", fgColor="1F4E79")
@@ -621,44 +569,34 @@ HFONT = Font(bold=True, color="FFFFFF")
 
 def style(ws):
     for c in ws[1]:
-        c.fill = HFILL
-        c.font = HFONT
+        c.fill = HFILL; c.font = HFONT
         c.alignment = Alignment(horizontal="center")
     ws.freeze_panes = "A2"
 
 def aw(ws):
     for col in ws.columns:
         w = max((len(str(c.value or "")) for c in col), default=10)
-        ws.column_dimensions[get_column_letter(col[0].column)].width = min(w+4, 60)
+        ws.column_dimensions[get_column_letter(col[0].column)].width = min(w+4,60)
 
 def add_csv(wb, title, pth):
     ws = wb.create_sheet(title=title[:31])
     p = Path(pth)
-    if not p.exists():
-        ws.append(["ERROR: Missing file"])
-        return
+    if not p.exists(): ws.append([f"Missing: {pth}"]); return
     rows = list(csv.reader(p.open(newline="", encoding="utf-8", errors="ignore")))
-    for r in rows:
-        ws.append(r)
-    if rows:
-        style(ws)
+    for r in rows: ws.append(r)
+    if rows: style(ws)
     aw(ws)
 
 def add_txt(wb, title, pth):
     ws = wb.create_sheet(title=title[:31])
     p = Path(pth)
-    if not p.exists():
-        ws.append(["ERROR: Missing file"])
-        return
-    ws.append(["Package"])
-    style(ws)
+    if not p.exists(): ws.append([f"Missing: {pth}"]); return
+    ws.append(["Package"]); style(ws)
     for line in p.read_text(encoding="utf-8", errors="ignore").splitlines():
-        if line.strip():
-            ws.append([line.strip()])
+        if line.strip(): ws.append([line.strip()])
     aw(ws)
 
-wb = Workbook()
-wb.remove(wb.active)
+wb = Workbook(); wb.remove(wb.active)
 add_txt(wb, "armv8_2a_pkgs", str(Path(workdir) / "pkgs_armv8_2a.txt"))
 for tgt in targets:
     d = Path(workdir) / tgt
@@ -668,42 +606,24 @@ for tgt in targets:
 wb.save(xlsx_out)
 print(f"  Wrote: {xlsx_out}")
 PY
-
-  [[ $? -eq 0 ]] || die "Failed to build deps.xlsx"
 fi
 
-# ─── Copy RPMs function ────────────────────────────────────────────────────────
+# ─── Copy RPMs ────────────────────────────────────────────────────────────────
 copy_rpms() {
   local PKG_LIST="$1" DEST_DIR="$2" LABEL="$3" TARGET_ARCH_FILTER="${4:-}"
   shift 4
   local RPM_SEARCH_DIRS=("$@")
   
-  [[ -f "$PKG_LIST" ]] || die "[$LABEL] Package list not found: $PKG_LIST"
-  
+  [[ -f "$PKG_LIST" ]] || { warn "[$LABEL] Package list not found"; return 1; }
   local total_pkgs; total_pkgs=$(grep -c '[^[:space:]]' "$PKG_LIST" || echo 0)
-  (( total_pkgs == 0 )) && { note "[$LABEL] No packages to copy"; return 0; }
+  (( total_pkgs == 0 )) && { note "[$LABEL] No packages"; return 0; }
 
-  mkdir -p "$DEST_DIR" || die "Failed to create $DEST_DIR"
+  mkdir -p "$DEST_DIR"
   note "[$LABEL] $total_pkgs packages → $DEST_DIR"
   [[ -n "$TARGET_ARCH_FILTER" ]] && note "[$LABEL] Arch filter: $TARGET_ARCH_FILTER"
-  $DRY_RUN && warn "[$LABEL] DRY-RUN mode"
+  $DRY_RUN && warn "[$LABEL] DRY-RUN"
 
-  # OPTIMIZATION: Pre-cache all available RPMs
-  note "[$LABEL] Scanning for available RPMs..."
-  local RPM_CACHE_FILE
-  RPM_CACHE_FILE=$(mktemp) || die "Failed to create temp file"
-  trap "rm -f '$RPM_CACHE_FILE'" RETURN
-  
-  for sdir in "${RPM_SEARCH_DIRS[@]}"; do
-    [[ -d "$sdir" ]] || continue
-    timeout 120 find -L "$sdir" -type f -name "*.rpm" 2>/dev/null >> "$RPM_CACHE_FILE" || true
-  done
-  
-  local rpm_cache_size; rpm_cache_size=$(wc -l < "$RPM_CACHE_FILE")
-  note "[$LABEL] Indexed $rpm_cache_size RPM files"
-
-  local copied=0 skipped=0 missing=0 current=0 pkg
-  local MISSING_LIST=()
+  local copied=0 missing=0 current=0 pkg
 
   while IFS= read -r pkg || [[ -n "$pkg" ]]; do
     pkg="${pkg#"${pkg%%[![:space:]]*}"}"
@@ -711,99 +631,47 @@ copy_rpms() {
     [[ -z "$pkg" || "$pkg" =~ ^# ]] && continue
     current=$(( current + 1 ))
 
-    # FIXED: Use simple string matching without complex regex escaping
-    # This handles all special characters naturally
     local all_matches=""
-    
-    # Step 1: Try direct match - package name followed by hyphen and digit
-    all_matches=$(grep "/${pkg}-[0-9]" "$RPM_CACHE_FILE" 2>/dev/null || true)
-    
-    # Step 2: If not found and package ends with digit, try splitting
-    # Example: libstdc++6 -> search for /libstdc++-6-
-    if [[ -z "$all_matches" ]] && [[ "$pkg" =~ ([0-9]+)$ ]]; then
-      local trailing_digit="${BASH_REMATCH[1]}"
-      local pkg_base="${pkg%${trailing_digit}}"
-      # Use plain grep without regex - treats pattern as literal string
-      all_matches=$(grep "/${pkg_base}-${trailing_digit}-" "$RPM_CACHE_FILE" 2>/dev/null || true)
-    fi
-    
-    # Step 3: Try with dot separator
-    if [[ -z "$all_matches" ]]; then
-      all_matches=$(grep "/${pkg}\." "$RPM_CACHE_FILE" 2>/dev/null || true)
-    fi
+    for sdir in "${RPM_SEARCH_DIRS[@]}"; do
+      [[ -d "$sdir" ]] || continue
+      local hits
+      hits=$(find -L "$sdir" -type f -regextype posix-extended -regex ".*/${pkg}-[0-9].*\.rpm" 2>/dev/null | sort)
+      [[ -n "$hits" ]] && all_matches+="$hits"$'\n'
+    done
+    all_matches="${all_matches%$'\n'}"
 
     if [[ -z "$all_matches" ]]; then
-      warn "[$LABEL][$current/$total_pkgs] ✗ NOT FOUND: $pkg"
-      MISSING_LIST+=("$pkg")
+      warn "[$LABEL][$current/$total_pkgs] ⚠️  No RPM: $pkg"
       missing=$(( missing + 1 ))
       continue
     fi
 
     local matches="$all_matches"
     if [[ -n "$TARGET_ARCH_FILTER" ]]; then
-      local filtered_matches=""
-      
-      # Try exact arch match first
-      filtered_matches=$(echo "$all_matches" | grep -E "\.${TARGET_ARCH_FILTER}\.rpm$" || true)
-      
-      # Fallback to noarch
-      if [[ -z "$filtered_matches" ]]; then
-        filtered_matches=$(echo "$all_matches" | grep -E "\.noarch\.rpm$" || true)
-      fi
-      
-      # Fallback to armv8_2a if not looking for noarch
-      if [[ -z "$filtered_matches" && "$TARGET_ARCH_FILTER" != "noarch" ]]; then
-        filtered_matches=$(echo "$all_matches" | grep -E "\.armv8_2a\.rpm$" || true)
-      fi
-      
-      # Reject if no suitable match found
-      if [[ -z "$filtered_matches" ]]; then
-        local available_archs
-        available_archs=$(echo "$all_matches" | xargs -I {} basename {} | sed 's/.*\.\([^.]*\)\.rpm$/\1/' | sort -u | tr '\n' ',' | sed 's/,$//')
-        warn "[$LABEL][$current/$total_pkgs] ✗ ARCH MISMATCH: $pkg (need: $TARGET_ARCH_FILTER, available: $available_archs)"
-        MISSING_LIST+=("$pkg [ARCH_MISMATCH]")
-        missing=$(( missing + 1 ))
+      matches=$(echo "$all_matches" | grep -i "\.${TARGET_ARCH_FILTER}\.rpm$" || true)
+      [[ -z "$matches" ]] && matches=$(echo "$all_matches" | grep -i "\.noarch\.rpm$" || true)
+      [[ -z "$matches" ]] && matches=$(echo "$all_matches" | grep -i "\.armv8_2a\.rpm$" || true)
+      [[ -z "$matches" ]] && matches="$all_matches"
+    fi
+
+    while IFS= read -r rpm; do
+      [[ -z "$rpm" ]] && continue
+      local bname; bname="$(basename "$rpm")"
+      if [[ -f "$DEST_DIR/$bname" ]]; then
+        note "[$LABEL] SKIP (exists): $bname"
         continue
       fi
-      
-      matches="$filtered_matches"
-    fi
-
-    # If multiple versions available, pick latest
-    local rpm_count; rpm_count=$(echo "$matches" | wc -l)
-    local rpm
-    if (( rpm_count > 1 )); then
-      rpm=$(echo "$matches" | sort -V | tail -1)
-    else
-      rpm=$(echo "$matches" | head -1)
-    fi
-
-    [[ -z "$rpm" ]] && continue
-    
-    local bname; bname="$(basename "$rpm")"
-    
-    # Check if already exists
-    if [[ -f "$DEST_DIR/$bname" ]]; then
-      note "[$LABEL][$current/$total_pkgs] ⊘ SKIP (exists): $bname"
-      skipped=$(( skipped + 1 ))
-      continue
-    fi
-    
-    if $DRY_RUN; then
-      ok "[$LABEL][$current/$total_pkgs] DRY: $bname"
-    else
-      cp "$rpm" "$DEST_DIR/" || die "[$LABEL] Failed to copy: $bname from $rpm"
-      ok "[$LABEL][$current/$total_pkgs] ✓ $bname"
-    fi
-    copied=$(( copied + 1 ))
+      if $DRY_RUN; then
+        ok "[$LABEL][$current/$total_pkgs] DRY-RUN: $bname"
+      else
+        cp "$rpm" "$DEST_DIR/"
+        ok "[$LABEL][$current/$total_pkgs] ✅ $bname"
+      fi
+      copied=$(( copied + 1 ))
+    done <<< "$matches"
   done < "$PKG_LIST"
 
-  # Report statistics
-  note "[$LABEL] Summary: copied=$copied skipped=$skipped missing=$missing"
-  
-  if (( missing > 0 )); then
-    die "[$LABEL] ERROR: $missing package(s) not found/matched. Missing: ${MISSING_LIST[*]}"
-  fi
+  note "[$LABEL] copied=$copied  missing=$missing"
 }
 
 if ! $NO_COPY; then
@@ -833,123 +701,117 @@ if ! $NO_COPY; then
   done
 fi
 
-# ─── Push to Artifactory Function ─────────────────────────────────────────────
-push_to_artifactory() {
-  if [[ -z "$ARTI_USER" ]]; then
-    read -rp "Artifactory username: " ARTI_USER || die "Failed to read username"
-  fi
-  
-  if [[ -z "$ARTI_TOKEN" ]]; then
-    read -rsp "Artifactory token: " ARTI_TOKEN && echo || die "Failed to read token"
-  fi
-  
-  if [[ -z "$ARTI_PATH" ]]; then
-    read -rp "Artifactory path: " ARTI_PATH || die "Failed to read path"
-  fi
-  
-  [[ -z "$ARTI_USER" ]] && die "Artifactory username is required"
-  [[ -z "$ARTI_TOKEN" ]] && die "Artifactory token is required"
-  [[ -z "$ARTI_PATH" ]] && die "Artifactory path is required"
+
+# ─── Push to Artifactory ──────────────────────────────────────────────────────
+if $PUSH; then
+  need curl
+  [[ -z "$ARTI_USER"  ]] && read -rp  "Artifactory username: " ARTI_USER
+  [[ -z "$ARTI_TOKEN" ]] && read -rsp "Artifactory token: " ARTI_TOKEN && echo
+  [[ -z "$ARTI_PATH"  ]] && read -rp  "Artifactory path: " ARTI_PATH
 
   header "Push to Artifactory"
   
-  local dirs_to_push=()
-  [[ -d "$OUTDIR/armv8_2a" ]] && dirs_to_push+=("$OUTDIR/armv8_2a")
-  for tgt in "${TARGET_NAMES[@]}"; do
-    [[ -d "$OUTDIR/$tgt" ]] && dirs_to_push+=("$OUTDIR/$tgt")
-  done
-  
-  [[ ${#dirs_to_push[@]} -eq 0 ]] && { warn "No output directories to push"; return 0; }
-  
-  for dir_path in "${dirs_to_push[@]}"; do
-    local dir_name; dir_name=$(basename "$dir_path")
-    local total; total=$(find -L "$dir_path" -type f 2>/dev/null | wc -l)
-    (( total == 0 )) && { note "[$dir_name] No files"; continue; }
-
-    note "Pushing [$dir_name] ($total files) → $ARTI_PATH/$dir_name"
-    
-    local push_fail=0
-    local file_count=0
-    
-    while IFS= read -r file; do
-      [[ -z "$file" ]] && continue
-      file_count=$(( file_count + 1 ))
-      
-      local REL; REL="${file#"$dir_path"/}"
-      local ENCODED_REL
-      ENCODED_REL=$(printf '%s\n' "$REL" | python3 -c "import sys, urllib.parse; print(urllib.parse.quote(sys.stdin.read().strip(), safe='/'))" 2>/dev/null) || {
-        warn "  Failed to URL-encode path: $REL, using raw path"
-        ENCODED_REL="$REL"
-      }
-      [[ -z "$ENCODED_REL" ]] && ENCODED_REL="$REL"
-      
-      local DEST; DEST="${ARTI_URL}/${ARTI_REPO}/${ARTI_PATH}/${dir_name}/${ENCODED_REL}"
-      
-      if $DRY_RUN; then
-        ok "  DRY: $REL"
-      else
-        local HTTP_CODE
-        HTTP_CODE=$(timeout 60 curl -sSL -u "${ARTI_USER}:${ARTI_TOKEN}" -X PUT "$DEST" -T "$file" -w "%{http_code}" -o /dev/null) || HTTP_CODE="000"
-        if [[ "$HTTP_CODE" =~ ^2 ]]; then
-          ok "  ✓ [$HTTP_CODE] $REL"
+  # Push armv8_2a directory
+  if [[ -d "$OUTDIR/armv8_2a" ]]; then
+    armv8_2a_TOTAL=$(find -L "$OUTDIR/armv8_2a" -type f 2>/dev/null | wc -l)
+    if (( armv8_2a_TOTAL > 0 )); then
+      note "Pushing armv8_2a ($armv8_2a_TOTAL files) → $ARTI_PATH/armv8_2a"
+      find -L "$OUTDIR/armv8_2a" -type f | while read -r file; do
+        REL="${file#"$OUTDIR/armv8_2a"/}"
+        DEST="${ARTI_URL}/${ARTI_REPO}/${ARTI_PATH}/armv8_2a/${REL}"
+        if $DRY_RUN; then
+          ok "  DRY-RUN: $REL"
         else
-          warn "  ✗ [$HTTP_CODE] $REL"
-          push_fail=$(( push_fail + 1 ))
+          HTTP_CODE=$(curl -sSL -u "${ARTI_USER}:${ARTI_TOKEN}" -X PUT "$DEST" -T "$file" -w "%{http_code}" -o /dev/null) || true
+          if [[ "$HTTP_CODE" =~ ^2 ]]; then
+            ok "  ✅ [$HTTP_CODE] $REL"
+          else
+            warn "  ❌ [$HTTP_CODE] $REL"
+          fi
         fi
+      done
+    fi
+  fi
+  
+  # Push target-specific directories
+  for tgt in "${TARGET_NAMES[@]}"; do
+    if [[ -d "$OUTDIR/$tgt" ]]; then
+      TGT_TOTAL=$(find -L "$OUTDIR/$tgt" -type f 2>/dev/null | wc -l)
+      if (( TGT_TOTAL > 0 )); then
+        note "Pushing [$tgt] ($TGT_TOTAL files) → $ARTI_PATH/$tgt"
+        find -L "$OUTDIR/$tgt" -type f | while read -r file; do
+          REL="${file#"$OUTDIR/$tgt"/}"
+          DEST="${ARTI_URL}/${ARTI_REPO}/${ARTI_PATH}/${tgt}/${REL}"
+          if $DRY_RUN; then
+            ok "  DRY-RUN: $REL"
+          else
+            HTTP_CODE=$(curl -sSL -u "${ARTI_USER}:${ARTI_TOKEN}" -X PUT "$DEST" -T "$file" -w "%{http_code}" -o /dev/null) || true
+            if [[ "$HTTP_CODE" =~ ^2 ]]; then
+              ok "  ✅ [$HTTP_CODE] $REL"
+            else
+              warn "  ❌ [$HTTP_CODE] $REL"
+            fi
+          fi
+        done
       fi
-    done < <(find -L "$dir_path" -type f 2>/dev/null)
-    
-    note "  [$dir_name] Processed $file_count files, $push_fail failed"
-    (( push_fail > 0 )) && die "Push failed for [$dir_name]: $push_fail file(s)"
+    fi
   done
   
   ok "Push complete"
-}
-
-if $PUSH; then
-  push_to_artifactory
 fi
 
-# ─── Verify Output ────────────────────────────────────────────────────────────
-header "Verifying Output"
-
-verify_dir_exists_with_files() {
-  local dir="$1" label="$2"
-  if [[ ! -d "$dir" ]]; then
-    warn "$label: Directory not found: $dir"
-    return 1
-  fi
-  local count; count=$(find -L "$dir" -type f 2>/dev/null | wc -l)
-  if (( count == 0 )); then
-    warn "$label: No files found"
-    return 1
-  fi
-  ok "$label: $count files"
-  return 0
-}
-
-verify_dir_exists_with_files "$OUTDIR/armv8_2a" "armv8_2a" || true
-
-for tgt in "${TARGET_NAMES[@]}"; do
-  verify_dir_exists_with_files "$OUTDIR/$tgt" "$tgt" || true
-done
-
-# ─── Final Summary ────────────────────────────────────────────────────────────
+# ─── Final summary ────────────────────────────────────────────────────────────
 header "Done"
-ok "All steps completed successfully"
-note "Workdir : $WORKDIR"
-note "Outdir  : $OUTDIR"
-note "Log     : $LOG_FILE"
+ok "All steps completed."
+note "Workdir  : $WORKDIR"
+note "Outdir   : $OUTDIR"
+note "Log file : $LOG_FILE"
 note ""
-note "Summary:"
-note "  armv8_2a: $(find -L "$OUTDIR/armv8_2a" -type f 2>/dev/null | wc -l) files"
+note "Output layout:"
+note "  $OUTDIR/armv8_2a/   ← noarch + armv8_2a RPMs (copied once)"
 for tgt in "${TARGET_NAMES[@]}"; do
-  COUNT=$(find -L "$OUTDIR/$tgt" -type f 2>/dev/null | wc -l)
-  note "  $tgt: $COUNT files"
+  TGT_ARCH="${tgt//-/_}"
+  note "  $OUTDIR/$tgt/  ← .$TGT_ARCH.rpm only"
 done
 note ""
-note "Output structure:"
-note "  $OUTDIR/armv8_2a/  ← Shared RPMs (noarch + armv8_2a)"
+note "Workdir layout:"
+note "  $WORKDIR/pkgs_armv8_2a.txt  ($(wc -l < "$WORKDIR/pkgs_armv8_2a.txt") pkgs)"
 for tgt in "${TARGET_NAMES[@]}"; do
-  note "  $OUTDIR/$tgt/     ← Target-specific RPMs"
+  TGT_DIR="$WORKDIR/$tgt"
+  note "  $TGT_DIR/"
+  for f in difference_A_minus_B.txt difference_B_minus_A.txt \
+            deps_A_minus_B.csv deps_B_minus_A.csv \
+            pkgs_all.txt pkgs_target_specific.txt; do
+    fp="$TGT_DIR/$f"
+    [[ -f "$fp" ]] && note "    ✔  $f  ($(wc -l < "$fp") lines)"
+  done
 done
+[[ -f "$WORKDIR/deps.xlsx" ]] && note "  ✔  $WORKDIR/deps.xlsx"
+
+# ─── Final summary ────────────────────────────────────────────────────────────
+header "Done"
+ok "All steps completed."
+note "Workdir  : $WORKDIR"
+note "Outdir   : $OUTDIR"
+note "Log file : $LOG_FILE"
+note ""
+note "Output layout:"
+note "  $OUTDIR/armv8_2a/   ← noarch + armv8_2a RPMs (copied once)"
+for tgt in "${TARGET_NAMES[@]}"; do
+  TGT_ARCH="${tgt//-/_}"
+  note "  $OUTDIR/$tgt/  ← .$TGT_ARCH.rpm only"
+done
+note ""
+note "Workdir layout:"
+note "  $WORKDIR/pkgs_armv8_2a.txt  ($(wc -l < "$WORKDIR/pkgs_armv8_2a.txt") pkgs)"
+for tgt in "${TARGET_NAMES[@]}"; do
+  TGT_DIR="$WORKDIR/$tgt"
+  note "  $TGT_DIR/"
+  for f in difference_A_minus_B.txt difference_B_minus_A.txt \
+            deps_A_minus_B.csv deps_B_minus_A.csv \
+            pkgs_all.txt pkgs_target_specific.txt; do
+    fp="$TGT_DIR/$f"
+    [[ -f "$fp" ]] && note "    ✔  $f  ($(wc -l < "$fp") lines)"
+  done
+done
+[[ -f "$WORKDIR/deps.xlsx" ]] && note "  ✔  $WORKDIR/deps.xlsx"
