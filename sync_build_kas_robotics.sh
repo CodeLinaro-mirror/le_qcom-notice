@@ -106,7 +106,7 @@ if [[ "$ARCH" =~ "arm" ]]; then
       sleep 3
       #time kas build meta-qcom-robotics-sdk/ci/iq-9075-evk.yml:meta-qcom-robotics-sdk/ci/${DISTRO}.yml:meta-qcom-robotics-sdk/ci/linux-qcom-6.18.yml:meta-qcom-robotics-sdk/ci/qcom-robotics-image.yml:meta-qcom-robotics-sdk/ci/performance.yml
       sleep 3
-      #kas shell meta-qcom-robotics-sdk/ci/iq-8275-evk.yml:meta-qcom-robotics-sdk/ci/${DISTRO}.yml:meta-qcom-robotics-sdk/ci/linux-qcom-6.18.yml:meta-qcom-robotics-sdk/ci/qcom-robotics-proprietary-image.yml:meta-qcom-robotics-sdk/ci/performance.yml -c "bitbake -c generate_qirp_sdk qcom-robotics-proprietary-image && bitbake -c populate_sdk_ext qcom-robotics-proprietary-image"
+      kas shell meta-qcom-robotics-sdk/ci/iq-8275-evk.yml:meta-qcom-robotics-sdk/ci/${DISTRO}.yml:meta-qcom-robotics-sdk/ci/linux-qcom-6.18.yml:meta-qcom-robotics-sdk/ci/qcom-robotics-proprietary-image.yml:meta-qcom-robotics-sdk/ci/performance.yml -c "bitbake -c generate_qirp_sdk qcom-robotics-proprietary-image && bitbake -c populate_sdk_ext qcom-robotics-proprietary-image"
       #sleep 3
       #kas shell meta-qcom-robotics-sdk/ci/iq-9075-evk.yml:meta-qcom-robotics-sdk/ci/${DISTRO}.yml:meta-qcom-robotics-sdk/ci/linux-qcom-6.18.yml:meta-qcom-robotics-sdk/ci/qcom-robotics-proprietary-image.yml:meta-qcom-robotics-sdk/ci/performance.yml -c "bitbake -c generate_qirp_sdk qcom-robotics-proprietary-image && bitbake -c populate_sdk_ext qcom-robotics-proprietary-image"
 else
