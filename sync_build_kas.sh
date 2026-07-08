@@ -146,7 +146,9 @@ cp $SUBDIR/scripts/hwe/NO.LOGIN.BINARY.LICENSE.QTI.pdf $WORKDIR
 cp $SUBDIR/scripts/nhlos/NHLOS_NOTICE $WORKDIR
 cat $SUBDIR/scripts/hwe/NOTICE >> $WORKDIR/NOTICE
 
-$SUBDIR/scripts/prune_rpm.sh --image-dir "$WORKDIR/build/tmp/deploy/images" --repo-dir "$WORKDIR/build/tmp/deploy/rpm" --outdir "$WORKDIR/output" --workdir "$WORKDIR"
+if [[ "$DISTRO" =~ "qcom-distro" ]]; then
+    $SUBDIR/scripts/prune_rpm.sh --image-dir "$WORKDIR/build/tmp/deploy/images" --repo-dir "$WORKDIR/build/tmp/deploy/rpm" --outdir "$WORKDIR/output" --workdir "$WORKDIR"
+fi
 
 # Go to working directory
 cd $WORKDIR
