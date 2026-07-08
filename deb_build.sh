@@ -87,7 +87,7 @@ cd $WORKDIR
 
 clone_repo()
 {
-        sudo rm -rf $WORKDIR/qcom-deb-images
+        rm -rf $WORKDIR/qcom-deb-images
         git clone https://github.com/qualcomm-linux/qcom-deb-images.git -b "$BRANCH"
         echo ">>> Checking out PR #$PR..."
         cd $WORKDIR/qcom-deb-images
@@ -112,7 +112,7 @@ build_rootfs()
 {
     echo ">>> Building rootfs..."
     cd $WORKDIR/qcom-deb-images
-    time sudo make USE_CONTAINER=no rootfs.tar \
+    time make USE_CONTAINER=no rootfs.tar \
         EXTRA_DEBOS_OPTS="-t localdebs:local-debs -t kernelpackage:none -t dtb:$DTB -t xfcedesktop:$XFCE -t snapshot:$SNAPSHOT -t overlays:qsc-deb-releases -t buildid:$BUILD_ID"
 }
 
@@ -121,7 +121,7 @@ build_sdcard()
 {
     echo ">>> Building SD card image..."
     cd $WORKDIR/qcom-deb-images
-    time sudo make USE_CONTAINER=no disk-sdcard.img \
+    time make USE_CONTAINER=no disk-sdcard.img \
         EXTRA_DEBOS_OPTS="-t dtb:$DTB"
 }
 
@@ -130,7 +130,7 @@ build_flash()
 {
     echo ">>> Building flashable images..."
     cd $WORKDIR/qcom-deb-images
-    time sudo make USE_CONTAINER=no flash \
+    time make USE_CONTAINER=no flash \
         EXTRA_DEBOS_OPTS="-t dtb:$DTB"
 }
 
