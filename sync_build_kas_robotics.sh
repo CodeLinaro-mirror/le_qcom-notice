@@ -94,45 +94,13 @@ if [[ "$ARCH" =~ "arm" ]]; then
    export SDKMACHINE="aarch64"
 fi
 
-if [[ "$ARCH" =~ "arm" ]]; then
-      DISTRO="qcom-robotics-distro"
-      echo "Architecture is $ARCH: Compile for all applicable targets (KM), compile eSDK and standard SDK for generic target, distro=$DISTRO"
-      # Run build
-      #time kas build meta-qcom-robotics-sdk/ci/iq-8275-evk.yml:meta-qcom-robotics-sdk/ci/${DISTRO}.yml:meta-qcom-robotics-sdk/ci/linux-qcom-6.18.yml:meta-qcom-robotics-sdk/ci/qcom-robotics-proprietary-image.yml:meta-qcom-robotics-sdk/ci/performance.yml
-      #sleep 3
-      #time kas build meta-qcom-robotics-sdk/ci/iq-8275-evk.yml:meta-qcom-robotics-sdk/ci/${DISTRO}.yml:meta-qcom-robotics-sdk/ci/linux-qcom-6.18.yml:meta-qcom-robotics-sdk/ci/qcom-robotics-image.yml:meta-qcom-robotics-sdk/ci/performance.yml
-      #sleep 3
-      time kas build meta-qcom-robotics-sdk/ci/iq-9075-evk.yml:meta-qcom-robotics-sdk/ci/${DISTRO}.yml:meta-qcom-robotics-sdk/ci/linux-qcom-6.18.yml:meta-qcom-robotics-sdk/ci/qcom-robotics-proprietary-image.yml:meta-qcom-robotics-sdk/ci/performance.yml
-      sleep 3
-      time kas build meta-qcom-robotics-sdk/ci/iq-9075-evk.yml:meta-qcom-robotics-sdk/ci/${DISTRO}.yml:meta-qcom-robotics-sdk/ci/linux-qcom-6.18.yml:meta-qcom-robotics-sdk/ci/qcom-robotics-image.yml:meta-qcom-robotics-sdk/ci/performance.yml
-      sleep 3
-      #kas shell meta-qcom-robotics-sdk/ci/iq-8275-evk.yml:meta-qcom-robotics-sdk/ci/${DISTRO}.yml:meta-qcom-robotics-sdk/ci/linux-qcom-6.18.yml:meta-qcom-robotics-sdk/ci/qcom-robotics-proprietary-image.yml:meta-qcom-robotics-sdk/ci/performance.yml -c "bitbake -c generate_qirp_sdk qcom-robotics-proprietary-image && bitbake -c populate_sdk_ext qcom-robotics-proprietary-image"
-      #sleep 3
-      kas shell meta-qcom-robotics-sdk/ci/iq-9075-evk.yml:meta-qcom-robotics-sdk/ci/${DISTRO}.yml:meta-qcom-robotics-sdk/ci/linux-qcom-6.18.yml:meta-qcom-robotics-sdk/ci/qcom-robotics-proprietary-image.yml:meta-qcom-robotics-sdk/ci/performance.yml -c "bitbake -c generate_qirp_sdk qcom-robotics-proprietary-image && bitbake -c populate_sdk_ext qcom-robotics-proprietary-image"
-else
-   if [ "$DOWNLOADSERVER" == 1 ]; then
-      DISTRO="qcom-distro-catchall"
-      echo "Architecture is $ARCH: Compile for Generic target, distro $DISTRO for downloads hosting"
-      time kas build meta-qcom/ci/qcom-armv8a.yml:meta-qcom/ci/${DISTRO}.yml:meta-qcom/ci/mirror-tarballs.yml:meta-qcom/ci/performance.yml
-      sleep 3
-      kas shell meta-qcom/ci/qcom-armv8a.yml:meta-qcom/ci/${DISTRO}.yml:meta-qcom/ci/mirror-tarballs.yml -c "bitbake -c populate_sdk qcom-multimedia-proprietary-image && bitbake -c populate_sdk_ext qcom-multimedia-proprietary-image"
-   else
-      DISTRO="qcom-robotics-distro"
-      echo "Architecture is $ARCH: Compile for all applicable targets (KM), compile eSDK and standard SDK for generic target, distro=$DISTRO"
-      # Run build
-      #time kas build meta-qcom-robotics-sdk/ci/iq-8275-evk.yml:meta-qcom-robotics-sdk/ci/${DISTRO}.yml:meta-qcom-robotics-sdk/ci/linux-qcom-6.18.yml:meta-qcom-robotics-sdk/ci/qcom-robotics-proprietary-image.yml:meta-qcom-robotics-sdk/ci/performance.yml
-      #sleep 3
-      #time kas build meta-qcom-robotics-sdk/ci/iq-8275-evk.yml:meta-qcom-robotics-sdk/ci/${DISTRO}.yml:meta-qcom-robotics-sdk/ci/linux-qcom-6.18.yml:meta-qcom-robotics-sdk/ci/qcom-robotics-image.yml:meta-qcom-robotics-sdk/ci/performance.yml
-      #sleep 3
-      time kas build meta-qcom-robotics-sdk/ci/iq-9075-evk.yml:meta-qcom-robotics-sdk/ci/${DISTRO}.yml:meta-qcom-robotics-sdk/ci/linux-qcom-6.18.yml:meta-qcom-robotics-sdk/ci/qcom-robotics-proprietary-image.yml:meta-qcom-robotics-sdk/ci/performance.yml
-      sleep 3
-      time kas build meta-qcom-robotics-sdk/ci/iq-9075-evk.yml:meta-qcom-robotics-sdk/ci/${DISTRO}.yml:meta-qcom-robotics-sdk/ci/linux-qcom-6.18.yml:meta-qcom-robotics-sdk/ci/qcom-robotics-image.yml:meta-qcom-robotics-sdk/ci/performance.yml
-      sleep 3
-      #kas shell meta-qcom-robotics-sdk/ci/iq-8275-evk.yml:meta-qcom-robotics-sdk/ci/${DISTRO}.yml:meta-qcom-robotics-sdk/ci/linux-qcom-6.18.yml:meta-qcom-robotics-sdk/ci/qcom-robotics-proprietary-image.yml:meta-qcom-robotics-sdk/ci/performance.yml -c "bitbake -c generate_qirp_sdk qcom-robotics-proprietary-image && bitbake -c populate_sdk_ext qcom-robotics-proprietary-image"
-      #sleep 3
-      kas shell meta-qcom-robotics-sdk/ci/iq-9075-evk.yml:meta-qcom-robotics-sdk/ci/${DISTRO}.yml:meta-qcom-robotics-sdk/ci/linux-qcom-6.18.yml:meta-qcom-robotics-sdk/ci/qcom-robotics-proprietary-image.yml:meta-qcom-robotics-sdk/ci/performance.yml -c "bitbake -c generate_qirp_sdk qcom-robotics-proprietary-image && bitbake -c populate_sdk_ext qcom-robotics-proprietary-image"
-   fi
-fi
+echo "Architecture is $ARCH: Compile for all applicable targets (KM), compile eSDK and standard SDK for generic target, distro=$DISTRO"
+# Run build
+time kas build meta-qcom-robotics-sdk/ci/${MACHINE}.yml:meta-qcom-robotics-sdk/ci/${DISTRO}.yml:meta-qcom-robotics-sdk/ci/linux-qcom-6.18.yml:meta-qcom-robotics-sdk/ci/qcom-robotics-proprietary-image.yml:meta-qcom-robotics-sdk/ci/performance.yml
+sleep 3
+time kas build meta-qcom-robotics-sdk/ci/${MACHINE}.yml:meta-qcom-robotics-sdk/ci/${DISTRO}.yml:meta-qcom-robotics-sdk/ci/linux-qcom-6.18.yml:meta-qcom-robotics-sdk/ci/qcom-robotics-image.yml:meta-qcom-robotics-sdk/ci/performance.yml
+sleep 3
+kas shell meta-qcom-robotics-sdk/ci/${MACHINE}.yml:meta-qcom-robotics-sdk/ci/${DISTRO}.yml:meta-qcom-robotics-sdk/ci/linux-qcom-6.18.yml:meta-qcom-robotics-sdk/ci/qcom-robotics-proprietary-image.yml:meta-qcom-robotics-sdk/ci/performance.yml -c "bitbake -c generate_qirp_sdk qcom-robotics-proprietary-image && bitbake -c populate_sdk_ext qcom-robotics-proprietary-image"
 
 # setup environment
 export SHELL=/bin/bash
