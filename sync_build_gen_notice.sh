@@ -127,6 +127,7 @@ else
    #time bitbake -c populate_sdk_ext qcom-multimedia-image && bitbake -c do_populate_sdk qcom-multimedia-image
 fi
 SUBDIR="${WORKDIR%/*}"
+exit 0
 
 # copy nhlos notice files
 cp $SUBDIR/scripts/hwe/NO.LOGIN.BINARY.LICENSE.QTI.pdf $WORKDIR
