@@ -20,18 +20,12 @@ Usage:
         -s, --snapshot
             Debian snapshot date (Eg: 20260528)
 
-        -d, --dtb
-            Device tree blob path (Eg: qcom/glymur-crd.dtb)
-
-        -p, --pr
-            PR number to checkout (Eg: 422, skip if not needed)
-
         -w, --workdir
             Working directory (Eg: /home/codelinaro/app)
 
         -x, --xfce
             Enable XFCE desktop (true/false, default: true)
-        
+
         -u, --jf-user
             JFrog username
 
@@ -41,15 +35,14 @@ Usage:
         -r, --jf-url
             JFrog Platform URL
 
-        
 END_OF_USAGE
     exit 1
 }
 
-LONG_OPTS="help,branch:,kernel-ref:,snapshot:,dtb:,pr:,workdir:,xfce:,jf-user:,jf-pass:,jf-url:"
+LONG_OPTS="help,branch:,kernel-ref:,snapshot:,workdir:,xfce:,jf-user:,jf-pass:,jf-url:"
 
 GETOPT_CMD=$(getopt \
-    -o hb:k:s:d:p:w:x:u:a:r: \
+    -o hb:k:s:w:x:u:a:r: \
     -l "$LONG_OPTS" \
     -n "$(basename "$0")" \
     -- "$@") || {
@@ -65,8 +58,6 @@ while true; do
        -b|--branch) BRANCH="$2"; shift ;;
        -k|--kernel-ref) KERNEL_REF="$2"; shift ;;
        -s|--snapshot) SNAPSHOT="$2"; shift ;;
-       -d|--dtb) DTB="$2"; shift ;;
-       -p|--pr) PR="$2"; shift ;;
        -w|--workdir) WORKDIR="$2"; shift ;;
        -x|--xfce) XFCE="$2"; shift ;;
        -u|--jf-user) JF_USER="$2"; shift ;;
@@ -89,10 +80,7 @@ clone_repo()
 {
         rm -rf $WORKDIR/qcom-deb-images
         git clone https://github.com/qualcomm-linux/qcom-deb-images.git -b "$BRANCH"
-        echo ">>> Checking out PR #$PR..."
         cd $WORKDIR/qcom-deb-images
-        git fetch origin pull/"$PR"/head:pr-"$PR"
-        git checkout pr-"$PR"
 }
 
 
@@ -104,7 +92,7 @@ build_kernel()
     time scripts/build-linux-deb.py --qcom-next --ref "$KERNEL_REF" prune.config qcom.config kernel-configs/*.config
 
     echo ">>> Copying kernel deb to debos-recipes/local-debs/..."
-    ls linux-image-*_arm64.deb | grep -v -- '-dbg_' | xargs -r cp -t debos-recipes/local-debs/
+    ls *.deb | grep -v dbg | xargs cp -t debos-recipes/local-debs/
 }
 
 
@@ -113,7 +101,7 @@ build_rootfs()
     echo ">>> Building rootfs..."
     cd $WORKDIR/qcom-deb-images
     time make USE_CONTAINER=no rootfs.tar \
-        EXTRA_DEBOS_OPTS="-t localdebs:local-debs -t kernelpackage:none -t dtb:$DTB -t xfcedesktop:$XFCE -t snapshot:$SNAPSHOT -t overlays:qsc-deb-releases -t buildid:$BUILD_ID"
+        EXTRA_DEBOS_OPTS="-t localdebs:local-debs -t kernelpackage:none -t xfcedesktop:$XFCE -t overlays:qsc-deb-releases -t buildid:$BUILD_ID"
 }
 
 
@@ -121,8 +109,7 @@ build_sdcard()
 {
     echo ">>> Building SD card image..."
     cd $WORKDIR/qcom-deb-images
-    time make USE_CONTAINER=no disk-sdcard.img \
-        EXTRA_DEBOS_OPTS="-t dtb:$DTB"
+    time make USE_CONTAINER=no disk-sdcard.img
 }
 
 
@@ -130,8 +117,7 @@ build_flash()
 {
     echo ">>> Building flashable images..."
     cd $WORKDIR/qcom-deb-images
-    time make USE_CONTAINER=no flash \
-        EXTRA_DEBOS_OPTS="-t dtb:$DTB"
+    time make USE_CONTAINER=no flash
 }
 
 generate_tar()
@@ -144,7 +130,7 @@ upload_artifacts()
 {
     /usr/local/bin/jf c add artifactory-server --url=$JF_URL --user=$JF_USER --password=$JF_PASS
     /usr/local/bin/jf rt u --detailed-summary --flat=false --recursive cd $WORKDIR/qcom-deb-images/deb_artifacts.tar qli-ci/flashable-binaries/meta-qcom-robotics/qcom-robotics-distro/iq-8275-evk/
-    echo ">>> Artifacts uploaded successfully! : with deb_artifacts.tar"    
+    echo ">>> Artifacts uploaded successfully! : with deb_artifacts.tar"
 }
 
 clone_repo
