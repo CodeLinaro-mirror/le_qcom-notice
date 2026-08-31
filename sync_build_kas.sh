@@ -1,164 +1,262 @@
+#!/bin/bash
+set -euo pipefail
 # **************************************************************************
 #
 # Copyright (c) 2023 Qualcomm Innovation Center, Inc. All rights reserved.
 # SPDX-License-Identifier: BSD-3-Clause
 #
 # **************************************************************************
-#!/bin/bash
-echo_usage()
+usage()
 {
     cat <<'END_OF_USAGE'
-
 Usage:
-    ./sync_build.sh [OPTIONS]
+  ./sync_build_kas.sh [OPTIONS]
 
-    Options:
-        -u, --url
-            repo url
-        -h, --help
-            Displays this help list
+  Options:
+    --help
+        Displays this help list
 
-        -b, --branch
-            branch name (Eg: LE.QCLINUX.1.0)
+    --tag
+        branch name (Eg: qli-2.0)
 
-        -p, --project
-            Project Name  (Eg: meta-qcom)
+    --machine
+        machine one or more space-separated values (Eg: rb3gen2-core-kit, iq-9075-evk)
 
-        -M, --machine
-            machine (Eg: qcm6490)
+    --distro
+        distro, one or more space-separated values (Eg: qcom-distro qcom-distro-sota)
 
-        -D, --downloadderver
-            0 or 1 (Eg: 1 to host downloads)
+    --arch
+        runner architecture (Eg: arm)
 
-        -d, --distro
-            Distro (Eg: qcom-wayland)
+    --art-url
+        artifactory url (Eg: )
 
-        -i, --image
-            Image (Eg: qcom-console-image)
+    --art-user
+        artifactory user (Eg: arm)
 
-        -w, --workdir
-            Working directory (Eg: /local/mnt/worksapce/test)
+    --art-pass
+        artifactory password (Eg: arm)
 
-        -a, --arch
-            architecture (Eg: x86, arm)
-
+    --upload
+        enable artifactory uploads
 END_OF_USAGE
     exit 1
 }
 
-LONG_OPTS="url:,help,branch:,project:,machine:,distro:,downloadserver:,image:,workdir:,arch:,"
-GETOPT_CMD=$(getopt -o b:d:D:h:i:p:M:u:w:a: -l $LONG_OPTS -n $(basename $0) -- "$@"
-) || \
-            { echo "error parsing options."; echo_usage; }
+parse_args() {
+    UPLOAD=0
+    MACHINES=()
+    DISTROS=()
+    SCRIPT_PATH="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-eval set -- "$GETOPT_CMD"
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+           --help)     usage ;;
+           --tag)      TAG="$2";      shift 2 ;;
+           --arch)     ARCH="$2";     shift 2 ;;
+           --machine)
+               shift
+               while [[ $# -gt 0 && "$1" != --* ]]; do
+                   MACHINES+=("$1")
+                   shift
+               done
+               ;;
+           --distro)
+               shift
+               while [[ $# -gt 0 && "$1" != --* ]]; do
+                   DISTROS+=("$1")
+                   shift
+               done
+               ;;
+           --art-url)  ART_URL="$2";  shift 2 ;;
+           --art-user) ART_USER="$2"; shift 2 ;;
+           --art-pass) ART_PASS="$2"; shift 2 ;;
+           --upload)   UPLOAD=1;      shift   ;;
+           *)          echo "Error: unrecognized option $1" >&2; usage ;;
+        esac
+    done
 
-while true; do
-    case "$1" in
-       -u|--url) URL="$2"; shift ;;
-       -h|--help) echo_usage;;
-       -b|--branch) BRANCH="$2"; shift ;;
-       -p|--project) PROJECT="$2"; shift ;;
-       -M|--machine) MACHINE="$2"; shift ;;
-       -d|--distro) DISTRO="$2"; shift ;;
-       -i|--image) IMAGE="$2"; shift ;;
-       -D|--downloadserver) DOWNLOADSERVER="$2"; shift ;;
-       -w|--workdir) WORKDIR="$2"; shift ;;
-       -a|--arch) ARCH="$2"; shift ;;
-       --) shift ; break ;;
-       *) echo "Error processing args -- unrecognized option $1" >&2
-          exit 1;;
-    esac
-    shift
-done
+    if [[ -z "$TAG" || "${#MACHINES[@]}" -eq 0 || -z "$ARCH" || "${#DISTROS[@]}" -eq 0 ]]; then
+        echo "Error: --tag, --machine, --arch and --distro are required." >&2
+        usage
+    fi
 
-# Create if working directory not created
-mkdir -p $WORKDIR
+    if [[ "$UPLOAD" == 1 && ( -z "$ART_URL" || -z "$ART_USER" || -z "$ART_PASS" ) ]]; then
+        echo "Error: --art-url, --art-user and --art-pass are required when --upload is set." >&2
+        usage
+    fi
+}
 
-# Go to working directory
-cd $WORKDIR
+configure_jf() {
+  jf c add clo-art \
+    --url="$ART_URL" \
+    --user="$ART_USER" \
+    --password="$ART_PASS" \
+    --basic-auth-only \
+    --interactive=false \
+    --overwrite
+}
 
-# repo init
-time git clone https://github.com/ricardosalveti/${PROJECT}.git -b "$BRANCH"
-#kas checkout meta-qcom-releases/lock.yml
+build_image() {
+  local MACHINE="$1"
+  local DISTRO="$2"
+  time kas build meta-qcom/ci/$MACHINE.yml:meta-qcom/ci/$DISTRO.yml:meta-qcom/ci/performance.yml
+  time kas shell meta-qcom/ci/$MACHINE.yml:meta-qcom/ci/$DISTRO.yml:meta-qcom/ci/performance.yml -c "bitbake package-index"
+}
 
-# kas configuration files need to be part of same repository
-# copy kas lock file to meta-qcom repository
-#cp meta-qcom-releases/lock.yml meta-qcom/ci/lock.yml
+build_sdk() {
+  local MACHINE="$1"
+  local DISTRO="$2"
+  local ARCH="$3"
+  [[ "$ARCH" == "arm" ]] && export SDKMACHINE=aarch64
+  time kas shell meta-qcom/ci/$MACHINE.yml:meta-qcom/ci/$DISTRO.yml:meta-qcom/ci/performance.yml -c "bitbake -c populate_sdk qcom-multimedia-proprietary-image && bitbake -c populate_sdk_ext qcom-multimedia-proprietary-image"
+}
 
-# build variables
-MACHINE="$MACHINE"
-DISTRO="$DISTRO"
+build_downloads() {
+  local MACHINE="$1"
+  local DISTRO="$2"
+  time kas build meta-qcom/ci/$MACHINE.yml:meta-qcom/ci/$DISTRO.yml:meta-qcom/ci/mirror-tarballs.yml:meta-qcom/ci/performance.yml
+}
 
-if [[ "$ARCH" =~ "arm" ]]; then
-   export SDKMACHINE="aarch64"
-fi
+generate_notice() {
+  cp $SCRIPT_PATH/hwe/NO.LOGIN.BINARY.LICENSE.QTI.pdf .
+  cat $SCRIPT_PATH/hwe/NOTICE $SCRIPT_PATH/nhlos/NHLOS_NOTICE >> NOTICE
+  find ./ -type f \( -iname "Notice" -o -iname "License" -o -iname "Copying" \
+    -o -iname "Credits" -o -iname "Patent" -o -iname "copyright" \) \
+    | xargs cat >> NOTICE_OSS
+  cat NOTICE_OSS >> NOTICE
+}
 
-if [[ "$ARCH" =~ "arm" ]]; then
-   #DISTRO="qcom-distro"
-   echo "Architecture is $ARCH: Compile for Generic target, compile eSDK and standard SDK for generic target, distro=$DISTRO"
-   time kas build meta-qcom/ci/qcom-armv8a.yml:meta-qcom/ci/${DISTRO}.yml:meta-qcom/ci/mirror-tarballs.yml:meta-qcom/ci/performance.yml
-   sleep 3
-   kas shell meta-qcom/ci/qcom-armv8a.yml:meta-qcom/ci/${DISTRO}.yml:meta-qcom/ci/mirror-tarballs.yml:meta-qcom/ci/performance.yml -c "bitbake -c populate_sdk qcom-multimedia-proprietary-image && bitbake -c populate_sdk_ext qcom-multimedia-proprietary-image"
-else
-   if [ "$DOWNLOADSERVER" == 1 ]; then
-      DISTRO="qcom-distro-catchall"
-      echo "Architecture is $ARCH: Compile for Generic target, distro $DISTRO for downloads hosting"
-      time kas build meta-qcom/ci/qcom-armv8a.yml:meta-qcom/ci/${DISTRO}.yml:meta-qcom/ci/mirror-tarballs.yml:meta-qcom/ci/performance.yml
-      sleep 3
-      kas shell meta-qcom/ci/qcom-armv8a.yml:meta-qcom/ci/${DISTRO}.yml:meta-qcom/ci/mirror-tarballs.yml -c "bitbake -c populate_sdk qcom-multimedia-proprietary-image && bitbake -c populate_sdk_ext qcom-multimedia-proprietary-image"
-   else
-      #DISTRO="qcom-distro"
-      echo "Architecture is $ARCH: Compile for all applicable targets (KLMT), compile eSDK and standard SDK for generic target, distro=$DISTRO"
-      # time kas build meta-qcom/ci/rb3gen2-core-kit.yml:meta-qcom/ci/${DISTRO}.yml:meta-qcom/ci/performance.yml
-      # time kas shell meta-qcom/ci/rb3gen2-core-kit.yml:meta-qcom/ci/${DISTRO}.yml:meta-qcom/ci/performance.yml -c "bitbake package-index"
-      # sleep 3
-      # time kas build meta-qcom/ci/iq-8275-evk.yml:meta-qcom/ci/${DISTRO}.yml:meta-qcom/ci/performance.yml
-      # time kas shell meta-qcom/ci/iq-8275-evk.yml:meta-qcom/ci/${DISTRO}.yml:meta-qcom/ci/performance.yml -c "bitbake package-index"
-      # sleep 3
-      # time kas build meta-qcom/ci/iq-9075-evk.yml:meta-qcom/ci/${DISTRO}.yml:meta-qcom/ci/performance.yml
-      # time kas shell meta-qcom/ci/iq-9075-evk.yml:meta-qcom/ci/${DISTRO}.yml:meta-qcom/ci/performance.yml -c "bitbake package-index"
-      # sleep 3
-      # time kas build meta-qcom/ci/iq-615-evk.yml:meta-qcom/ci/${DISTRO}.yml:meta-qcom/ci/performance.yml
-      # time kas shell meta-qcom/ci/iq-615-evk.yml:meta-qcom/ci/${DISTRO}.yml:meta-qcom/ci/performance.yml -c "bitbake package-index"
-      # sleep 3
-      # time kas build meta-qcom/ci/iq-x7181-evk.yml:meta-qcom/ci/${DISTRO}.yml:meta-qcom/ci/performance.yml
-      # time kas shell meta-qcom/ci/iq-x7181-evk.yml:meta-qcom/ci/${DISTRO}.yml:meta-qcom/ci/performance.yml -c "bitbake package-index"
-      # sleep 3
-      # time kas build meta-qcom/ci/iq-x5121-evk.yml:meta-qcom/ci/${DISTRO}.yml:meta-qcom/ci/performance.yml
-      # time kas shell meta-qcom/ci/iq-x5121-evk.yml:meta-qcom/ci/${DISTRO}.yml:meta-qcom/ci/performance.yml -c "bitbake package-index"
-      # sleep 3
-      time kas build meta-qcom/ci/qcom-armv8a.yml:meta-qcom/ci/${DISTRO}.yml:meta-qcom/ci/mirror-tarballs.yml:meta-qcom/ci/performance.yml
-      time kas shell meta-qcom/ci/qcom-armv8a.yml:meta-qcom/ci/${DISTRO}.yml:meta-qcom/ci/mirror-tarballs.yml:meta-qcom/ci/performance.yml -c "bitbake package-index"
-      sleep 3
-      kas shell meta-qcom/ci/qcom-armv8a.yml:meta-qcom/ci/${DISTRO}.yml:meta-qcom/ci/mirror-tarballs.yml:meta-qcom/ci/performance.yml -c "bitbake -c populate_sdk qcom-multimedia-proprietary-image && bitbake -c populate_sdk_ext qcom-multimedia-proprietary-image"
-   fi
-fi
+stage_image() {
+  local MACHINE="$1"
+  local DISTRO="$2"
+  local PUBLISH_DIR="release/images"
+  mkdir -p "$PUBLISH_DIR"
 
-# setup environment
-export SHELL=/bin/bash
+  for IMAGE in "qcom-multimedia-image" "qcom-multimedia-proprietary-image"; do
+    local STAGING_DIR="images/$MACHINE"
+    local ARCHIVE="build/tmp/deploy/images/$MACHINE/$IMAGE-$MACHINE.rootfs.qcomflash.tar.gz"
+    mkdir -p "$STAGING_DIR"
 
-SUBDIR="${WORKDIR%/*}"
+    tar -xzf "$ARCHIVE" --directory "$STAGING_DIR"
+    cp NOTICE NO.LOGIN.BINARY.LICENSE.QTI.pdf "$STAGING_DIR"
+    zip -r "$PUBLISH_DIR/$TAG-$IMAGE.zip" "$STAGING_DIR"
 
-# copy nhlos notice files
-cp $SUBDIR/scripts/hwe/NO.LOGIN.BINARY.LICENSE.QTI.pdf $WORKDIR
-cp $SUBDIR/scripts/nhlos/NHLOS_NOTICE $WORKDIR
-cat $SUBDIR/scripts/hwe/NOTICE >> $WORKDIR/NOTICE
+    rm -rf "$STAGING_DIR"
+  done
+}
 
-if [[ "$DISTRO" =~ "qcom-distro" ]]; then
-    $SUBDIR/scripts/prune_rpm.sh --image-dir "$WORKDIR/build/tmp/deploy/images" --repo-dir "$WORKDIR/build/tmp/deploy/rpm" --outdir "$WORKDIR/output" --workdir "$WORKDIR"
-fi
+stage_rpm() {
+  local MACHINE="$1"
+  local DISTRO="$2"
+  local PUBLISH_DIR="release/rpm"
+  local LOGS_DIR="logs/rpm"
+  $SCRIPT_PATH/prune_rpm.sh \
+    --image-dir "build/tmp/deploy/images" \
+    --repo-dir "build/tmp/deploy/rpm" \
+    --outdir "$PUBLISH_DIR" \
+    --workdir "$LOGS_DIR"
+}
 
-# Go to working directory
-cd $WORKDIR
+stage_sdk() {
+  local MACHINE="$1"
+  local DISTRO="$2"
+  local PUBLISH_DIR="release/sdk"
+  local STAGING_DIR="images/$MACHINE"
+  mkdir -p "$PUBLISH_DIR" "$STAGING_DIR/sdk"
 
-cat NHLOS_NOTICE >> NOTICE
+  cp NOTICE NO.LOGIN.BINARY.LICENSE.QTI.pdf "$STAGING_DIR"
 
-# Get notices related to all the open-source modules that are pulled during build
-NoticeFilesList=`find ./ -type f -iname "Notice" -o -iname "License" -o -iname "Copying" -o -iname "Credits" -o -iname "Patent" -o -iname "copyright" | xargs`
-cat $NoticeFilesList >> NOTICE_OSS
-cat NOTICE_OSS >> NOTICE
+  cp build/tmp/deploy/sdk/*-toolchain-ext-*.sh "$STAGING_DIR/sdk"
+  zip -r "$PUBLISH_DIR/$ARCH-$TAG-esdk.zip" "$STAGING_DIR"
+  rm -f "$STAGING_DIR/sdk"/*-toolchain-ext-*.sh
 
-pwd
+  cp build/tmp/deploy/sdk/*-toolchain-*.sh "$STAGING_DIR/sdk"
+  rm -f "$STAGING_DIR/sdk"/*-toolchain-ext-*.sh
+  zip -r "$PUBLISH_DIR/$ARCH-$TAG-standardsdk.zip" "$STAGING_DIR"
 
-tree -L 2 build/tmp/deploy || true
+  rm -rf "$STAGING_DIR"
+}
+
+stage_downloads() {
+  local PUBLISH_DIR="release/downloads/"
+  mkdir -p $PUBLISH_DIR
+  cp -r build/downloads $PUBLISH_DIR
+}
+
+upload_image() {
+  local SRC="release/images/(**)"
+  local DST="qli-ci/flashable-binaries/meta-qcom/$DISTRO/$MACHINE/{1}"
+  jf rt u --detailed-summary --flat=false --include-dirs --recursive "$SRC" "$DST"
+}
+
+upload_rpm() {
+  local SRC="release/rpm/(**)"
+  local DST="qli-yocto-rpm-signed/$TAG/rpm/{1}"
+  jf rt u --detailed-summary --flat=false --include-dirs --recursive "$SRC" "$DST"
+}
+
+upload_sdk() {
+  local SRC="release/sdk/(**)"
+  local DST="qli-ci/flashable-binaries/meta-qcom/$DISTRO/$MACHINE/{1}"
+  jf rt u --detailed-summary --flat=false --include-dirs --recursive "$SRC" "$DST"
+}
+
+upload_downloads() {
+  local SRC="release/downloads/(**)"
+  local DST="qli-ci/downloads/2.x/{1}"
+  jf rt u --detailed-summary --flat=false --include-dirs --recursive "$SRC" "$DST"
+}
+
+cleanup() {
+  rm -rf release logs images build/tmp
+  rm -rf NOTICE NOTICE_OSS NO.LOGIN.BINARY.LICENSE.QTI.pdf
+}
+
+build_task() {
+  cleanup
+
+  build_image "$MACHINE" "$DISTRO"
+  generate_notice
+
+  # prebuilt images are identical for x86 and ARM architectures, only upload once
+  if [[ $ARCH == "x86" ]]; then
+    stage_image "$MACHINE" "$DISTRO"
+    [[ "$UPLOAD" == "1" ]] && upload_image "$DISTRO" "$MACHINE"
+  fi
+
+  # rpms are only generated for qcom-distro variant
+  if [[ $DISTRO == "qcom-distro" ]] && [[ $ARCH == "x86" ]]; then
+    stage_rpm "$MACHINE" "$DISTRO"
+    [[ "$UPLOAD" == "1" ]] && upload_rpm "$MACHINE" "$DISTRO"
+  fi
+
+  # sdks needs to be generated for the generic target only
+  if [[ $MACHINE == "qcom-armv8a" ]]; then
+    build_sdk "$MACHINE" "$DISTRO" "$ARCH"
+    stage_sdk "$MACHINE" "$DISTRO"
+    [[ "$UPLOAD" == "1" ]] && upload_sdk $MACHINE $DISTRO
+  fi
+
+  # downloads server needs to be populated only once
+  if [[ $MACHINE == "qcom-armv8a" ]] && [[ $DISTRO == "qcom-distro" ]] && [[ $ARCH == "x86" ]]; then
+    build_downloads "$MACHINE" qcom-distro-catchall
+    stage_downloads
+    [[ "$UPLOAD" == "1" ]] && upload_downloads $MACHINE $DISTRO
+  fi
+}
+
+main() {
+  parse_args "$@"
+  [[ "$UPLOAD" == 1 ]] && configure_jf
+
+  git clone https://github.com/qualcomm-linux/meta-qcom -b "$TAG"
+
+  for MACHINE in "${MACHINES[@]}"; do
+    for DISTRO in "${DISTROS[@]}"; do
+      build_task $MACHINE $DISTRO
+    done
+  done
+}
+
+main "$@"
