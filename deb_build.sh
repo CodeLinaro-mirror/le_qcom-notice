@@ -105,7 +105,7 @@ build_rootfs()
     echo ">>> Building rootfs..."
     cd $WORKDIR/qcom-deb-images
     time make USE_CONTAINER=no rootfs.tar \
-        EXTRA_DEBOS_OPTS="-t localdebs:local-debs -t kernelpackage:none -t xfcedesktop:$XFCE  -t snapshot:$SNAPSHOT -t overlays:qsc-deb-releases -t buildid:$BUILD_ID"
+        EXTRA_DEBOS_OPTS="-t localdebs:local-debs -t kernelpackage:none -t xfcedesktop:$XFCE  -t snapshot:$SNAPSHOT -t buildid:$BUILD_ID"
 }
 
 
