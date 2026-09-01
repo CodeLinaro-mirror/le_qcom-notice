@@ -29,6 +29,9 @@ Usage:
         -u, --jf-user
             JFrog username
 
+        -t, --tag
+            release tag to checkout (Eg: 20260731-1, skip if not needed)
+
         -a, --jf-pass
             JFrog password or token
 
@@ -39,10 +42,10 @@ END_OF_USAGE
     exit 1
 }
 
-LONG_OPTS="help,branch:,kernel-ref:,snapshot:,workdir:,xfce:,jf-user:,jf-pass:,jf-url:"
+LONG_OPTS="help,branch:,kernel-ref:,snapshot:,workdir:,xfce:,jf-user:,tag:,jf-pass:,jf-url:"
 
 GETOPT_CMD=$(getopt \
-    -o hb:k:s:w:x:u:a:r: \
+    -o hb:k:s:w:x:u:t:a:r: \
     -l "$LONG_OPTS" \
     -n "$(basename "$0")" \
     -- "$@") || {
@@ -61,6 +64,7 @@ while true; do
        -w|--workdir) WORKDIR="$2"; shift ;;
        -x|--xfce) XFCE="$2"; shift ;;
        -u|--jf-user) JF_USER="$2"; shift ;;
+       -t|--tag) RELEASE_TAG="$2"; shift ;;
        -a|--jf-pass) JF_PASS="$2"; shift ;;
        -r|--jf-url) JF_URL="$2"; shift ;;
        --) shift ; break ;;
@@ -79,7 +83,7 @@ cd $WORKDIR
 clone_repo()
 {
         rm -rf $WORKDIR/qcom-deb-images
-        git clone https://github.com/qualcomm-linux/qcom-deb-images.git -b "$BRANCH"
+        git clone --branch "$RELEASE_TAG" --single-branch https://github.com/qualcomm-linux/qcom-deb-images.git
         cd $WORKDIR/qcom-deb-images
 }
 
@@ -101,7 +105,7 @@ build_rootfs()
     echo ">>> Building rootfs..."
     cd $WORKDIR/qcom-deb-images
     time make USE_CONTAINER=no rootfs.tar \
-        EXTRA_DEBOS_OPTS="-t localdebs:local-debs -t kernelpackage:none -t xfcedesktop:$XFCE -t overlays:qsc-deb-releases -t buildid:$BUILD_ID"
+        EXTRA_DEBOS_OPTS="-t localdebs:local-debs -t kernelpackage:none -t xfcedesktop:$XFCE  -t snapshot:$SNAPSHOT -t overlays:qsc-deb-releases -t buildid:$BUILD_ID"
 }
 
 
@@ -109,7 +113,8 @@ build_sdcard()
 {
     echo ">>> Building SD card image..."
     cd $WORKDIR/qcom-deb-images
-    time make USE_CONTAINER=no disk-sdcard.img
+    time make USE_CONTAINER=no disk-sdcard.img \
+        EXTRA_DEBOS_OPTS="-t snapshot:$SNAPSHOT"
 }
 
 
