@@ -110,24 +110,24 @@ else
    else
       #DISTRO="qcom-distro"
       echo "Architecture is $ARCH: Compile for all applicable targets (KLMT), compile eSDK and standard SDK for generic target, distro=$DISTRO"
-      time kas build meta-qcom/ci/rb3gen2-core-kit.yml:meta-qcom/ci/${DISTRO}.yml:meta-qcom/ci/performance.yml
-      time kas shell meta-qcom/ci/rb3gen2-core-kit.yml:meta-qcom/ci/${DISTRO}.yml:meta-qcom/ci/performance.yml -c "bitbake package-index"
-      sleep 3
-      time kas build meta-qcom/ci/iq-8275-evk.yml:meta-qcom/ci/${DISTRO}.yml:meta-qcom/ci/performance.yml
-      time kas shell meta-qcom/ci/iq-8275-evk.yml:meta-qcom/ci/${DISTRO}.yml:meta-qcom/ci/performance.yml -c "bitbake package-index"
-      sleep 3
-      time kas build meta-qcom/ci/iq-9075-evk.yml:meta-qcom/ci/${DISTRO}.yml:meta-qcom/ci/performance.yml
-      time kas shell meta-qcom/ci/iq-9075-evk.yml:meta-qcom/ci/${DISTRO}.yml:meta-qcom/ci/performance.yml -c "bitbake package-index"
-      sleep 3
-      time kas build meta-qcom/ci/iq-615-evk.yml:meta-qcom/ci/${DISTRO}.yml:meta-qcom/ci/performance.yml
-      time kas shell meta-qcom/ci/iq-615-evk.yml:meta-qcom/ci/${DISTRO}.yml:meta-qcom/ci/performance.yml -c "bitbake package-index"
-      sleep 3
-      time kas build meta-qcom/ci/iq-x7181-evk.yml:meta-qcom/ci/${DISTRO}.yml:meta-qcom/ci/performance.yml
-      time kas shell meta-qcom/ci/iq-x7181-evk.yml:meta-qcom/ci/${DISTRO}.yml:meta-qcom/ci/performance.yml -c "bitbake package-index"
-      sleep 3
-      time kas build meta-qcom/ci/iq-x5121-evk.yml:meta-qcom/ci/${DISTRO}.yml:meta-qcom/ci/performance.yml
-      time kas shell meta-qcom/ci/iq-x5121-evk.yml:meta-qcom/ci/${DISTRO}.yml:meta-qcom/ci/performance.yml -c "bitbake package-index"
-      sleep 3
+      # time kas build meta-qcom/ci/rb3gen2-core-kit.yml:meta-qcom/ci/${DISTRO}.yml:meta-qcom/ci/performance.yml
+      # time kas shell meta-qcom/ci/rb3gen2-core-kit.yml:meta-qcom/ci/${DISTRO}.yml:meta-qcom/ci/performance.yml -c "bitbake package-index"
+      # sleep 3
+      # time kas build meta-qcom/ci/iq-8275-evk.yml:meta-qcom/ci/${DISTRO}.yml:meta-qcom/ci/performance.yml
+      # time kas shell meta-qcom/ci/iq-8275-evk.yml:meta-qcom/ci/${DISTRO}.yml:meta-qcom/ci/performance.yml -c "bitbake package-index"
+      # sleep 3
+      # time kas build meta-qcom/ci/iq-9075-evk.yml:meta-qcom/ci/${DISTRO}.yml:meta-qcom/ci/performance.yml
+      # time kas shell meta-qcom/ci/iq-9075-evk.yml:meta-qcom/ci/${DISTRO}.yml:meta-qcom/ci/performance.yml -c "bitbake package-index"
+      # sleep 3
+      # time kas build meta-qcom/ci/iq-615-evk.yml:meta-qcom/ci/${DISTRO}.yml:meta-qcom/ci/performance.yml
+      # time kas shell meta-qcom/ci/iq-615-evk.yml:meta-qcom/ci/${DISTRO}.yml:meta-qcom/ci/performance.yml -c "bitbake package-index"
+      # sleep 3
+      # time kas build meta-qcom/ci/iq-x7181-evk.yml:meta-qcom/ci/${DISTRO}.yml:meta-qcom/ci/performance.yml
+      # time kas shell meta-qcom/ci/iq-x7181-evk.yml:meta-qcom/ci/${DISTRO}.yml:meta-qcom/ci/performance.yml -c "bitbake package-index"
+      # sleep 3
+      # time kas build meta-qcom/ci/iq-x5121-evk.yml:meta-qcom/ci/${DISTRO}.yml:meta-qcom/ci/performance.yml
+      # time kas shell meta-qcom/ci/iq-x5121-evk.yml:meta-qcom/ci/${DISTRO}.yml:meta-qcom/ci/performance.yml -c "bitbake package-index"
+      # sleep 3
       time kas build meta-qcom/ci/qcom-armv8a.yml:meta-qcom/ci/${DISTRO}.yml:meta-qcom/ci/mirror-tarballs.yml:meta-qcom/ci/performance.yml
       time kas shell meta-qcom/ci/qcom-armv8a.yml:meta-qcom/ci/${DISTRO}.yml:meta-qcom/ci/mirror-tarballs.yml:meta-qcom/ci/performance.yml -c "bitbake package-index"
       sleep 3
