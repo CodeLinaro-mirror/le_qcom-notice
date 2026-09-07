@@ -105,7 +105,7 @@ build_rootfs()
     echo ">>> Building rootfs..."
     cd $WORKDIR/qcom-deb-images
     time make USE_CONTAINER=no rootfs.tar \
-        EXTRA_DEBOS_OPTS="-t localdebs:local-debs -t kernelpackage:none -t xfcedesktop:$XFCE  -t snapshot:$SNAPSHOT -t buildid:$BUILD_ID"
+        EXTRA_DEBOS_OPTS="-t localdebs:local-debs -t kernelpackage:none -t xfcedesktop:$XFCE  -t snapshot:$SNAPSHOT -t overlays:qsc-deb-releases -t buildid:$BUILD_ID"
 }
 
 
@@ -128,7 +128,7 @@ build_flash()
 generate_tar()
 {
     cd $WORKDIR/qcom-deb-images
-    tar -cvf deb_artifacts.tar flash_glymur-crd_nvme flash_glymur-crd_spinor disk-sdcard.img1 disk-sdcard.img2
+    tar -cvf deb_artifacts.tar flash_glymur-crd_nvme flash_glymur-crd_spinor disk-sdcard.img1 disk-sdcard.img2 dtb-multidtb-glymur.bin
 }
 
 upload_artifacts()
