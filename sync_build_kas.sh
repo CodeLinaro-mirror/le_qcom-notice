@@ -79,7 +79,7 @@ mkdir -p $WORKDIR
 cd $WORKDIR
 
 # repo init
-time git clone https://github.com/qualcomm-linux/${PROJECT}.git -b "$BRANCH"
+time git clone https://github.com/ricardosalveti/${PROJECT}.git -b "$BRANCH"
 #kas checkout meta-qcom-releases/lock.yml
 
 # kas configuration files need to be part of same repository
@@ -110,10 +110,6 @@ else
    else
       #DISTRO="qcom-distro"
       echo "Architecture is $ARCH: Compile for all applicable targets (KLMT), compile eSDK and standard SDK for generic target, distro=$DISTRO"
-      # Run build
-      time kas build meta-qcom/ci/shikra-evk.yml:meta-qcom/ci/${DISTRO}.yml:meta-qcom/ci/performance.yml
-      time kas shell meta-qcom/ci/shikra-evk.yml:meta-qcom/ci/${DISTRO}.yml:meta-qcom/ci/performance.yml -c "bitbake package-index"
-      sleep 3
       # time kas build meta-qcom/ci/rb3gen2-core-kit.yml:meta-qcom/ci/${DISTRO}.yml:meta-qcom/ci/performance.yml
       # time kas shell meta-qcom/ci/rb3gen2-core-kit.yml:meta-qcom/ci/${DISTRO}.yml:meta-qcom/ci/performance.yml -c "bitbake package-index"
       # sleep 3
@@ -132,10 +128,10 @@ else
       # time kas build meta-qcom/ci/iq-x5121-evk.yml:meta-qcom/ci/${DISTRO}.yml:meta-qcom/ci/performance.yml
       # time kas shell meta-qcom/ci/iq-x5121-evk.yml:meta-qcom/ci/${DISTRO}.yml:meta-qcom/ci/performance.yml -c "bitbake package-index"
       # sleep 3
-      # time kas build meta-qcom/ci/qcom-armv8a.yml:meta-qcom/ci/${DISTRO}.yml:meta-qcom/ci/mirror-tarballs.yml:meta-qcom/ci/performance.yml
-      # time kas shell meta-qcom/ci/qcom-armv8a.yml:meta-qcom/ci/${DISTRO}.yml:meta-qcom/ci/mirror-tarballs.yml:meta-qcom/ci/performance.yml -c "bitbake package-index"
-      # sleep 3
-      # kas shell meta-qcom/ci/qcom-armv8a.yml:meta-qcom/ci/${DISTRO}.yml:meta-qcom/ci/mirror-tarballs.yml:meta-qcom/ci/performance.yml -c "bitbake -c populate_sdk qcom-multimedia-proprietary-image && bitbake -c populate_sdk_ext qcom-multimedia-proprietary-image"
+      time kas build meta-qcom/ci/qcom-armv8a.yml:meta-qcom/ci/${DISTRO}.yml:meta-qcom/ci/mirror-tarballs.yml:meta-qcom/ci/performance.yml
+      time kas shell meta-qcom/ci/qcom-armv8a.yml:meta-qcom/ci/${DISTRO}.yml:meta-qcom/ci/mirror-tarballs.yml:meta-qcom/ci/performance.yml -c "bitbake package-index"
+      sleep 3
+      kas shell meta-qcom/ci/qcom-armv8a.yml:meta-qcom/ci/${DISTRO}.yml:meta-qcom/ci/mirror-tarballs.yml:meta-qcom/ci/performance.yml -c "bitbake -c populate_sdk qcom-multimedia-proprietary-image && bitbake -c populate_sdk_ext qcom-multimedia-proprietary-image"
    fi
 fi
 
