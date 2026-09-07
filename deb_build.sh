@@ -128,7 +128,7 @@ build_flash()
 generate_tar()
 {
     cd $WORKDIR/qcom-deb-images
-    tar -cvf deb_artifacts.tar flash_glymur-crd_nvme flash_glymur-crd_spinor disk-sdcard.img1 disk-sdcard.img2
+    tar -cvf deb_artifacts.tar flash_glymur-crd_nvme flash_glymur-crd_spinor disk-sdcard.img1 disk-sdcard.img2 dtb-multidtb-glymur.bin
 }
 
 upload_artifacts()
