@@ -67,7 +67,7 @@ build_robotics_image() {
     echo ">>> [1/4] [$target] Building qcom-robotics-image (non-prop)..."
     cd "$NON_PROP_DIR"
     kas shell "${ci_target_yml}:${ci_distro_yml}" \
-        -c "bitbake -c build qcom-robotics-image"
+        -c "bitbake -c build -q qcom-robotics-image"
 }
 
 build_proprietary_image() {
@@ -80,7 +80,7 @@ build_proprietary_image() {
     cd "$PROP_DIR"
     kas build "${ci_target_yml}:${ci_distro_yml}:${ci_prop_yml}"
     kas shell "${ci_target_yml}:${ci_distro_yml}:${ci_prop_yml}" \
-        -c "bitbake -c build qcom-robotics-image"
+        -c "bitbake -c build -q qcom-robotics-image"
 }
 
 collect_artifacts() {
