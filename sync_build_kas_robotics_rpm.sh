@@ -4,15 +4,15 @@ set -ex
 echo_usage() {
     cat <<'EOF'
 
-Usage: ./build.sh [OPTIONS]
+Usage: ./sync_build_kas_robotics_rpm.sh [OPTIONS]
 
     Options:
-        -h, --help       Displays this help
-        -t, --target     Board target (repeatable: -t iq-9075-evk -t iq-8275-evk)
-        -w, --workdir    Working directory
-        -u, --jf-user    JFrog username
-        -a, --jf-pass    JFrog password or token
-        -r, --jf-url     JFrog Platform URL
+        -h, --help         Displays this help
+        -t, --target       Board target (e.g. iq-8275-evk or iq-9075-evk)
+        -w, --workdir      Working directory
+        -u, --jf-user      JFrog username
+        -a, --jf-pass      JFrog password or token
+        -r, --jf-url       JFrog Platform URL
         -g, --release-tag  Git tag or branch to clone the SDK at
 
 EOF
@@ -26,15 +26,13 @@ GETOPT_CMD=$(getopt -o ht:w:u:a:r:g: -l "$LONG_OPTS" -n "$(basename "$0")" -- "$
 }
 eval set -- "$GETOPT_CMD"
 
-TARGETS=()
-
 while true; do
     case "$1" in
-        -h|--help)    echo_usage ;;
-        -t|--target)  TARGETS+=("$2"); shift ;;
-        -w|--workdir) WORKDIR="$2";    shift ;;
-        -u|--jf-user) JF_USER="$2";   shift ;;
-        -a|--jf-pass) JF_PASS="$2";   shift ;;
+        -h|--help)        echo_usage ;;
+        -t|--target)      TARGET="$2";       shift ;;
+        -w|--workdir)     WORKDIR="$2";      shift ;;
+        -u|--jf-user)     JF_USER="$2";      shift ;;
+        -a|--jf-pass)     JF_PASS="$2";      shift ;;
         -r|--jf-url)      JF_URL="$2";       shift ;;
         -g|--release-tag) RELEASE_TAG="$2";  shift ;;
         --) shift; break ;;
@@ -43,74 +41,52 @@ while true; do
     shift
 done
 
-[ "${#TARGETS[@]}" -eq 0 ] && { echo "ERROR: --target is required"; echo_usage; }
-[ -z "$RELEASE_TAG" ]     && { echo "ERROR: --release-tag is required"; echo_usage; }
-[ -z "$WORKDIR" ] && WORKDIR="$(pwd)"
+[ -z "$TARGET" ]      && { echo "ERROR: --target is required"; echo_usage; }
+[ -z "$RELEASE_TAG" ] && { echo "ERROR: --release-tag is required"; echo_usage; }
+[ -z "$WORKDIR" ]     && WORKDIR="$(pwd)"
 
 SDK_REPO="meta-qcom-robotics-sdk"
 SDK_GIT="https://github.com/qualcomm-linux/meta-qcom-robotics-sdk.git"
 RPM_DEPS_GIT="https://github.qualcomm.com/tengf/rpm-deps"
 
-NON_PROP_DIR="${WORKDIR}/non-prop"
-PROP_DIR="${WORKDIR}/prop"
-COMMON_DIR="${WORKDIR}/common"
-
-mkdir -p "$NON_PROP_DIR" "$PROP_DIR"
-cd "$NON_PROP_DIR" && git clone -b "$RELEASE_TAG" "$SDK_GIT"
-cd "$PROP_DIR"     && git clone -b "$RELEASE_TAG" "$SDK_GIT"
-
-build_robotics_image() {
-    local target="$1"
-    local ci_target_yml="${SDK_REPO}/ci/${target}.yml"
-    local ci_distro_yml="${SDK_REPO}/ci/qcom-robotics-distro.yml"
-
-    echo ">>> [1/4] [$target] Building qcom-robotics-image (non-prop)..."
-    cd "$NON_PROP_DIR"
-    kas shell "${ci_target_yml}:${ci_distro_yml}" \
-        -c "bitbake -c build -q qcom-robotics-image"
-}
+TARGET_DIR="${WORKDIR}/${TARGET}"
+RPM_DEPS_DIR="${WORKDIR}/rpm-deps"
+OUTPUT_DIR="${WORKDIR}/output"
 
 build_proprietary_image() {
-    local target="$1"
-    local ci_target_yml="${SDK_REPO}/ci/${target}.yml"
-    local ci_distro_yml="${SDK_REPO}/ci/qcom-robotics-distro.yml"
-    local ci_prop_yml="${SDK_REPO}/ci/qcom-robotics-proprietary-image.yml"
-
-    echo ">>> [2/4] [$target] Building qcom-robotics-image (prop)..."
-    cd "$PROP_DIR"
-    kas build "${ci_target_yml}:${ci_distro_yml}:${ci_prop_yml}"
-    kas shell "${ci_target_yml}:${ci_distro_yml}:${ci_prop_yml}" \
-        -c "bitbake -c build -q qcom-robotics-image"
+    echo ">>> [2/4] Building proprietary image for ${TARGET}..."
+    cd "$TARGET_DIR"
+    kas shell "${SDK_REPO}/ci/${TARGET}.yml:${SDK_REPO}/ci/linux-qcom-6.18.yml:${SDK_REPO}/ci/qcom-robotics-proprietary-image.yml:${SDK_REPO}/ci/performance.yml" \
+        -c "bitbake -q -c build qcom-robotics-proprietary-image"
 }
 
-collect_artifacts() {
-    local target="$1"
-
-    echo ">>> [3/4] [$target] Collecting artifacts into common/..."
-    mkdir -p "${COMMON_DIR}/images" "${COMMON_DIR}/rpm"
-
-    cp -r "${NON_PROP_DIR}/build/tmp/deploy/images/." "${COMMON_DIR}/images/"
-    cp -r "${PROP_DIR}/build/tmp/deploy/images/."     "${COMMON_DIR}/images/"
-
-    cp -r "${NON_PROP_DIR}/build/tmp/deploy/rpm/." "${COMMON_DIR}/rpm/"
-    cp -r "${PROP_DIR}/build/tmp/deploy/rpm/."     "${COMMON_DIR}/rpm/"
+build_robotics_image() {
+    echo ">>> [3/4] Building robotics image for ${TARGET}..."
+    cd "$TARGET_DIR"
+    kas shell "${SDK_REPO}/ci/${TARGET}.yml:${SDK_REPO}/ci/linux-qcom-6.18.yml:${SDK_REPO}/ci/qcom-robotics-image.yml:${SDK_REPO}/ci/performance.yml" \
+        -c "bitbake -q -c build qcom-robotics-image"
 }
 
 publish_rpms() {
     echo ">>> [4/4] Pruning and pushing RPMs..."
-    bash "${COMMON_DIR}/rpm-deps/prune_and_push_rpms.sh" \
-        --image-dir "${COMMON_DIR}/images" \
-        --repo-dir "${COMMON_DIR}/rpm" \
-        --outdir "${COMMON_DIR}/output"
+    mkdir -p "$OUTPUT_DIR"
+    bash "${RPM_DEPS_DIR}/prune_and_push_rpms.sh" \
+        --image-dir "${TARGET_DIR}/build/tmp/deploy/images" \
+        --repo-dir  "${TARGET_DIR}/build/tmp/deploy/rpm" \
+        --outdir    "$OUTPUT_DIR"
 }
 
-for TARGET in "${TARGETS[@]}"; do
-    build_robotics_image "$TARGET"
-    build_proprietary_image "$TARGET"
-    collect_artifacts "$TARGET"
-done
+# 1. Sync — clone SDK into target dir
+echo ">>> [1/4] Syncing SDK into ${TARGET_DIR}..."
+mkdir -p "$TARGET_DIR"
+cd "$TARGET_DIR" && git clone -b "$RELEASE_TAG" "$SDK_GIT"
 
-mkdir -p "${COMMON_DIR}/output"
-cd "$COMMON_DIR"
-git clone "$RPM_DEPS_GIT" rpm-deps
+# 2. Build proprietary image
+build_proprietary_image
+
+# 3. Build non-proprietary image
+build_robotics_image
+
+# 4. Clone rpm-deps at workspace root, then prune and publish
+cd "$WORKDIR" && git clone "$RPM_DEPS_GIT" rpm-deps
 publish_rpms
