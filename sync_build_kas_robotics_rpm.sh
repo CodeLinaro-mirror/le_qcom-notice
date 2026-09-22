@@ -47,8 +47,8 @@ done
 
 SDK_REPO="meta-qcom-robotics-sdk"
 SDK_GIT="https://github.com/qualcomm-linux/meta-qcom-robotics-sdk.git"
-RPM_DEPS_GIT="https://github.qualcomm.com/tengf/rpm-deps"
 
+SCRIPT_PATH="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 TARGET_DIR="${WORKDIR}/${TARGET}"
 RPM_DEPS_DIR="${WORKDIR}/rpm-deps"
 OUTPUT_DIR="${WORKDIR}/output"
@@ -67,10 +67,10 @@ build_robotics_image() {
         -c "bitbake -q -c build qcom-robotics-image"
 }
 
-publish_rpms() {
+prune_rpms() {
     echo ">>> [4/4] Pruning and pushing RPMs..."
     mkdir -p "$OUTPUT_DIR"
-    bash "${RPM_DEPS_DIR}/prune_and_push_rpms.sh" \
+    bash "${SCRIPT_PATH}/prune_rpms_robotics.sh" \
         --image-dir "${TARGET_DIR}/build/tmp/deploy/images" \
         --repo-dir  "${TARGET_DIR}/build/tmp/deploy/rpm" \
         --outdir    "$OUTPUT_DIR"
@@ -87,6 +87,5 @@ build_proprietary_image
 # 3. Build non-proprietary image
 build_robotics_image
 
-# 4. Clone rpm-deps at workspace root, then prune and publish
-cd "$WORKDIR" && git clone "$RPM_DEPS_GIT" rpm-deps
-publish_rpms
+# 4. Prune rpms for robotics
+prune_rpms
