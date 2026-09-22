@@ -56,14 +56,14 @@ OUTPUT_DIR="${WORKDIR}/output"
 build_proprietary_image() {
     echo ">>> [2/4] Building proprietary image for ${TARGET}..."
     cd "$TARGET_DIR"
-    kas shell "${SDK_REPO}/ci/${TARGET}.yml:${SDK_REPO}/ci/linux-qcom-6.18.yml:${SDK_REPO}/ci/qcom-robotics-proprietary-image.yml:${SDK_REPO}/ci/performance.yml" \
+    kas shell "${SDK_REPO}/ci/${TARGET}.yml:${SDK_REPO}/ci/linux-qcom-6.18.yml:${SDK_REPO}/ci/qcom-robotics-proprietary-image.yml:${SDK_REPO}/ci/qcom-robotics-distro.yml:${SDK_REPO}/ci/performance.yml" \
         -c "bitbake -q -c build qcom-robotics-proprietary-image"
 }
 
 build_robotics_image() {
     echo ">>> [3/4] Building robotics image for ${TARGET}..."
     cd "$TARGET_DIR"
-    kas shell "${SDK_REPO}/ci/${TARGET}.yml:${SDK_REPO}/ci/linux-qcom-6.18.yml:${SDK_REPO}/ci/qcom-robotics-image.yml:${SDK_REPO}/ci/performance.yml" \
+    kas shell "${SDK_REPO}/ci/${TARGET}.yml:${SDK_REPO}/ci/linux-qcom-6.18.yml:${SDK_REPO}/ci/qcom-robotics-image.yml:${SDK_REPO}/ci/qcom-robotics-distro.yml:${SDK_REPO}/ci/performance.yml" \
         -c "bitbake -q -c build qcom-robotics-image"
 }
 
