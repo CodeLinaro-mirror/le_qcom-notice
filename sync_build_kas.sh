@@ -250,6 +250,8 @@ main() {
   parse_args "$@"
   [[ "$UPLOAD" == 1 ]] && configure_jf
 
+  set -x
+
   git clone https://github.com/qualcomm-linux/meta-qcom -b "$TAG"
 
   for MACHINE in "${MACHINES[@]}"; do
