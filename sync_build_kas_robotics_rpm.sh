@@ -197,7 +197,7 @@ upload_sdk() {
 
 upload_rpm() {
     local SRC="${PUBLISH_DIR}/rpm/(**)"
-    local DST="qli-yocto-rpm-signed/${RELEASE_TAG}/rpm/{1}"
+    local DST="qli-robotics-yocto-rpm-signed/${RELEASE_TAG}/rpm/{1}"
     jf rt u --detailed-summary --flat=false --include-dirs --recursive "$SRC" "$DST"
 }
 
