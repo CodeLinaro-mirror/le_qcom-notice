@@ -14,17 +14,16 @@ Usage: ./sync_build_kas_robotics_rpm.sh [OPTIONS]
         -a, --jf-pass          JFrog password or token
         -r, --jf-url           JFrog Platform URL
         -g, --release-tag      Git tag or branch to clone the SDK at
-        --upload-images        Stage and upload flashable images to Artifactory
+        --arch                 Target architecture: x86 or arm (required)
+        --upload-images        Build, stage and upload flashable images to Artifactory
         --upload-sdk           Build, stage and upload SDK to Artifactory
         --upload-rpm           Stage and upload RPMs to Artifactory
-
-    Note: --jf-user, --jf-pass and --jf-url are required when any --upload-* flag is set.
 
 EOF
     exit 1
 }
 
-LONG_OPTS="help,target:,workdir:,jf-user:,jf-pass:,jf-url:,release-tag:,upload-images,upload-sdk,upload-rpm"
+LONG_OPTS="help,target:,workdir:,jf-user:,jf-pass:,jf-url:,release-tag:,arch:,upload-images,upload-sdk,upload-rpm"
 GETOPT_CMD=$(getopt -o ht:w:u:a:r:g: -l "$LONG_OPTS" -n "$(basename "$0")" -- "$@") || {
     echo "error parsing options."
     echo_usage
@@ -47,6 +46,7 @@ while true; do
         --upload-images)  UPLOAD_IMAGES=1 ;;
         --upload-sdk)     UPLOAD_SDK=1 ;;
         --upload-rpm)     UPLOAD_RPM=1 ;;
+        --arch)           ARCH="$2";         shift ;;
         --) shift; break ;;
         *) echo "Unknown option: $1"; exit 1 ;;
     esac
@@ -55,13 +55,9 @@ done
 
 [ -z "$TARGET" ]      && { echo "ERROR: --target is required"; echo_usage; }
 [ -z "$RELEASE_TAG" ] && { echo "ERROR: --release-tag is required"; echo_usage; }
+[ -z "$ARCH" ]        && { echo "ERROR: --arch is required (e.g. x86 or arm)"; echo_usage; }
 [ -z "$WORKDIR" ]     && WORKDIR="$(pwd)"
 
-if [[ "$UPLOAD_IMAGES" == "1" || "$UPLOAD_SDK" == "1" || "$UPLOAD_RPM" == "1" ]]; then
-    [ -z "$JF_URL" ]  && { echo "ERROR: --jf-url is required when any --upload-* flag is set"; echo_usage; }
-    [ -z "$JF_USER" ] && { echo "ERROR: --jf-user is required when any --upload-* flag is set"; echo_usage; }
-    [ -z "$JF_PASS" ] && { echo "ERROR: --jf-pass is required when any --upload-* flag is set"; echo_usage; }
-fi
 
 export SHELL=/bin/bash
 export SDKMACHINE="aarch64"
@@ -126,8 +122,7 @@ stage_image() {
 
         tar -xzf "$ARCHIVE" --directory "$STAGING_DIR"
         cp "${TARGET_DIR}/NOTICE" "${TARGET_DIR}/NO.LOGIN.BINARY.LICENSE.QTI.pdf" "$STAGING_DIR"
-        zip -r "${IMG_PUBLISH_DIR}/${RELEASE_TAG}-${IMAGE}.zip" "$STAGING_DIR"
-
+        (cd "${WORKDIR}" && zip -r "${IMG_PUBLISH_DIR}/${RELEASE_TAG}-${IMAGE}.zip" "images/${TARGET}")
         rm -rf "$STAGING_DIR"
     done
 }
@@ -136,19 +131,30 @@ stage_sdk() {
     echo ">>> [5b] Staging SDK..."
     local SDK_PUBLISH_DIR="${PUBLISH_DIR}/sdk"
     local STAGING_DIR="${WORKDIR}/images/${TARGET}"
-    mkdir -p "$SDK_PUBLISH_DIR" "$STAGING_DIR/sdk"
+    mkdir -p "$SDK_PUBLISH_DIR" "$STAGING_DIR/sdk" "$STAGING_DIR/qirpsdk_artifacts"
 
     cp "${TARGET_DIR}/NOTICE" "${TARGET_DIR}/NO.LOGIN.BINARY.LICENSE.QTI.pdf" "$STAGING_DIR"
+    cp -r "${TARGET_DIR}/build/tmp/deploy/sdk/." "$STAGING_DIR/sdk/"
+    cp -r "${TARGET_DIR}/build/tmp/deploy/qirpsdk_artifacts/." "$STAGING_DIR/qirpsdk_artifacts/"
 
     # eSDK
-    cp "${TARGET_DIR}/build/tmp/deploy/sdk/"*-toolchain-ext-*.sh "$STAGING_DIR/sdk"
-    zip -r "${SDK_PUBLISH_DIR}/${TARGET}-${RELEASE_TAG}-esdk.zip" "$STAGING_DIR"
-    rm -f "$STAGING_DIR/sdk/"*-toolchain-ext-*.sh
+    (cd "${WORKDIR}" && zip -r "${SDK_PUBLISH_DIR}/${ARCH}-${RELEASE_TAG}-esdk.zip" "images/${TARGET}" \
+        -i "images/${TARGET}/sdk/*-toolchain-ext-*.sh" \
+        -i "images/${TARGET}/NOTICE" \
+        -i "images/${TARGET}/NO.LOGIN.BINARY.LICENSE.QTI.pdf")
 
-    # Standard SDK (toolchain-*.sh matches both; remove ext again to isolate standard)
-    cp "${TARGET_DIR}/build/tmp/deploy/sdk/"*-toolchain-*.sh "$STAGING_DIR/sdk"
-    rm -f "$STAGING_DIR/sdk/"*-toolchain-ext-*.sh
-    zip -r "${SDK_PUBLISH_DIR}/${TARGET}-${RELEASE_TAG}-standardsdk.zip" "$STAGING_DIR"
+    # Standard SDK
+    (cd "${WORKDIR}" && zip -r "${SDK_PUBLISH_DIR}/${ARCH}-${RELEASE_TAG}-standardsdk.zip" "images/${TARGET}" \
+        -i "images/${TARGET}/sdk/*-toolchain-*.sh" \
+        -x "images/${TARGET}/sdk/*-toolchain-ext-*.sh" \
+        -i "images/${TARGET}/NOTICE" \
+        -i "images/${TARGET}/NO.LOGIN.BINARY.LICENSE.QTI.pdf")
+
+    # QIRP SDK artifacts
+    (cd "${WORKDIR}" && zip -r "${SDK_PUBLISH_DIR}/${ARCH}-${RELEASE_TAG}-robotics-sdk-artifacts.zip" \
+        "images/${TARGET}/qirpsdk_artifacts" \
+        "images/${TARGET}/NOTICE" \
+        "images/${TARGET}/NO.LOGIN.BINARY.LICENSE.QTI.pdf")
 
     rm -rf "$STAGING_DIR"
 }
@@ -179,13 +185,13 @@ configure_jf() {
 
 upload_image() {
     local SRC="${PUBLISH_DIR}/images/(**)"
-    local DST="qli-ci/flashable-binaries/meta-qcom-robotics-sdk/${TARGET}/{1}"
+    local DST="qli-ci/flashable-binaries/meta-qcom-robotics/qcom-robotics-distro/${TARGET}/{1}"
     jf rt u --detailed-summary --flat=false --include-dirs --recursive "$SRC" "$DST"
 }
 
 upload_sdk() {
     local SRC="${PUBLISH_DIR}/sdk/(**)"
-    local DST="qli-ci/flashable-binaries/meta-qcom-robotics-sdk/${TARGET}/{1}"
+    local DST="qli-ci/flashable-binaries/meta-qcom-robotics/qcom-robotics-distro/${TARGET}/{1}"
     jf rt u --detailed-summary --flat=false --include-dirs --recursive "$SRC" "$DST"
 }
 
@@ -197,21 +203,19 @@ upload_rpm() {
 
 # ─── Main ─────────────────────────────────────────────────────────────────────
 
-# Cleanup stale artifacts from previous runs
-rm -rf "${PUBLISH_DIR}" "${LOGS_DIR}" "${WORKDIR}/images"
-
 # 1. Sync — clone SDK into target dir
 echo ">>> [1] Syncing SDK into ${TARGET_DIR}..."
 mkdir -p "$TARGET_DIR"
 cd "$TARGET_DIR" && git clone -b "$RELEASE_TAG" "$SDK_GIT"
 
-# 2. Build proprietary image (flashable image + RPMs)
+# 2. Build proprietary image + robotics image
 build_proprietary_image
 sleep 3
 
 # 3. Build non-proprietary robotics image (flashable image + RPMs)
 build_robotics_image
 sleep 3
+
 
 # 4. Generate SDK (only if SDK upload is requested)
 if [[ "$UPLOAD_SDK" == "1" ]]; then
