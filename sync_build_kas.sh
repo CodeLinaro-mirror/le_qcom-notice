@@ -179,7 +179,7 @@ stage_sdk() {
 }
 
 stage_downloads() {
-  local PUBLISH_DIR="release/downloads/"
+  local PUBLISH_DIR="release/"
   mkdir -p $PUBLISH_DIR
   cp -r build/downloads $PUBLISH_DIR
 }
