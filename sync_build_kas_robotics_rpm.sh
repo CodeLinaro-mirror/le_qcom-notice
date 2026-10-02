@@ -1,20 +1,20 @@
 #!/bin/bash
-set -ex
+set -e
 
-echo_usage() {
+usage() {
     cat <<'EOF'
 
 Usage: ./sync_build_kas_robotics_rpm.sh [OPTIONS]
 
     Options:
-        -h, --help             Displays this help
-        -t, --target           Board target (e.g. iq-8275-evk or iq-9075-evk)
-        -w, --workdir          Working directory
-        -u, --jf-user          JFrog username
-        -a, --jf-pass          JFrog password or token
-        -r, --jf-url           JFrog Platform URL
-        -g, --release-tag      Git tag or branch to clone the SDK at
+        --help                 Displays this help
+        --tag                  Git tag or branch to clone the SDK at
         --arch                 Target architecture: x86 or arm (required)
+        --target               Board target (e.g. iq-8275-evk or iq-9075-evk)
+        --workdir              Working directory
+        --jf-user              JFrog username
+        --jf-pass              JFrog password or token
+        --jf-url               JFrog Platform URL
         --upload-images        Build, stage and upload flashable images to Artifactory
         --upload-sdk           Build, stage and upload SDK to Artifactory
         --upload-rpm           Stage and upload RPMs to Artifactory
@@ -23,54 +23,41 @@ EOF
     exit 1
 }
 
-LONG_OPTS="help,target:,workdir:,jf-user:,jf-pass:,jf-url:,release-tag:,arch:,upload-images,upload-sdk,upload-rpm"
-GETOPT_CMD=$(getopt -o ht:w:u:a:r:g: -l "$LONG_OPTS" -n "$(basename "$0")" -- "$@") || {
-    echo "error parsing options."
-    echo_usage
+parse_args() {
+    UPLOAD_IMAGES=0
+    UPLOAD_SDK=0
+    UPLOAD_RPM=0
+    SDK_REPO="meta-qcom-robotics-sdk"
+    SDK_GIT="https://github.com/qualcomm-linux/meta-qcom-robotics-sdk.git"
+    SCRIPT_PATH="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+    while [ $# -gt 0 ]; do
+        case "$1" in
+            --help)           usage ;;
+            --tag)            TAG="$2";          shift 2 ;;
+            --arch)           ARCH="$2";         shift 2 ;;
+            --target)         TARGET="$2";       shift 2 ;;
+            --workdir)        WORKDIR="$2";      shift 2 ;;
+            --jf-user)        JF_USER="$2";      shift 2 ;;
+            --jf-pass)        JF_PASS="$2";      shift 2 ;;
+            --jf-url)         JF_URL="$2";       shift 2 ;;
+            --upload-images)  UPLOAD_IMAGES=1;  shift ;;
+            --upload-sdk)     UPLOAD_SDK=1;     shift ;;
+            --upload-rpm)     UPLOAD_RPM=1;     shift ;;
+            --) shift; break ;;
+            *) echo "Unknown option: $1"; exit 1 ;;
+        esac
+    done
+
+    [ -z "$TAG" ]     && { echo "ERROR: --tag is required"; usage; }
+    [ -z "$ARCH" ]    && { echo "ERROR: --arch is required (e.g. x86 or arm)"; usage; }
+    [ -z "$TARGET" ]  && { echo "ERROR: --target is required"; usage; }
+    [ -z "$WORKDIR" ] && WORKDIR="$(pwd)"
+
+    TARGET_DIR="${WORKDIR}/${TARGET}"
+    PUBLISH_DIR="${WORKDIR}/release"
+    LOGS_DIR="${WORKDIR}/logs"
 }
-eval set -- "$GETOPT_CMD"
-
-UPLOAD_IMAGES=0
-UPLOAD_SDK=0
-UPLOAD_RPM=0
-
-while true; do
-    case "$1" in
-        -h|--help)        echo_usage ;;
-        -t|--target)      TARGET="$2";       shift ;;
-        -w|--workdir)     WORKDIR="$2";      shift ;;
-        -u|--jf-user)     JF_USER="$2";      shift ;;
-        -a|--jf-pass)     JF_PASS="$2";      shift ;;
-        -r|--jf-url)      JF_URL="$2";       shift ;;
-        -g|--release-tag) RELEASE_TAG="$2";  shift ;;
-        --upload-images)  UPLOAD_IMAGES=1 ;;
-        --upload-sdk)     UPLOAD_SDK=1 ;;
-        --upload-rpm)     UPLOAD_RPM=1 ;;
-        --arch)           ARCH="$2";         shift ;;
-        --) shift; break ;;
-        *) echo "Unknown option: $1"; exit 1 ;;
-    esac
-    shift
-done
-
-[ -z "$TARGET" ]      && { echo "ERROR: --target is required"; echo_usage; }
-[ -z "$RELEASE_TAG" ] && { echo "ERROR: --release-tag is required"; echo_usage; }
-[ -z "$ARCH" ]        && { echo "ERROR: --arch is required (e.g. x86 or arm)"; echo_usage; }
-[ -z "$WORKDIR" ]     && WORKDIR="$(pwd)"
-
-
-export SHELL=/bin/bash
-export SDKMACHINE="aarch64"
-
-SDK_REPO="meta-qcom-robotics-sdk"
-SDK_GIT="https://github.com/qualcomm-linux/meta-qcom-robotics-sdk.git"
-
-SCRIPT_PATH="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-TARGET_DIR="${WORKDIR}/${TARGET}"
-PUBLISH_DIR="${WORKDIR}/release"
-LOGS_DIR="${WORKDIR}/logs"
-
-# ─── Build functions ──────────────────────────────────────────────────────────
 
 build_proprietary_image() {
     echo ">>> Building proprietary image for ${TARGET}..."
@@ -89,11 +76,10 @@ build_robotics_image() {
 build_sdk() {
     echo ">>> Generating SDK for ${TARGET}..."
     cd "$TARGET_DIR"
+    [[ $ARCH == "arm" ]] && export SDKMACHINE="aarch64"
     time kas shell "${SDK_REPO}/ci/${TARGET}.yml:${SDK_REPO}/ci/linux-qcom-6.18.yml:${SDK_REPO}/ci/qcom-robotics-proprietary-image.yml:${SDK_REPO}/ci/qcom-robotics-distro.yml:${SDK_REPO}/ci/performance.yml" \
         -c "bitbake -q -c generate_qirp_sdk qcom-robotics-proprietary-image && bitbake -q -c populate_sdk_ext qcom-robotics-proprietary-image"
 }
-
-# ─── Notice function ──────────────────────────────────────────────────────────
 
 generate_notice() {
     echo ">>> Generating notices..."
@@ -108,8 +94,6 @@ generate_notice() {
     cat NOTICE_OSS >> NOTICE
 }
 
-# ─── Stage functions ──────────────────────────────────────────────────────────
-
 stage_image() {
     echo ">>> [5a] Staging flashable images..."
     local IMG_PUBLISH_DIR="${PUBLISH_DIR}/images"
@@ -122,7 +106,7 @@ stage_image() {
 
         tar -xzf "$ARCHIVE" --directory "$STAGING_DIR"
         cp "${TARGET_DIR}/NOTICE" "${TARGET_DIR}/NO.LOGIN.BINARY.LICENSE.QTI.pdf" "$STAGING_DIR"
-        (cd "${WORKDIR}" && zip -r "${IMG_PUBLISH_DIR}/${RELEASE_TAG}-${IMAGE}.zip" "images/${TARGET}")
+        (cd "${WORKDIR}" && zip -r "${IMG_PUBLISH_DIR}/${TAG}-${IMAGE}.zip" "images/${TARGET}")
         rm -rf "$STAGING_DIR"
     done
 }
@@ -138,20 +122,20 @@ stage_sdk() {
     cp -r "${TARGET_DIR}/build/tmp/deploy/qirpsdk_artifacts/." "$STAGING_DIR/qirpsdk_artifacts/"
 
     # eSDK
-    (cd "${WORKDIR}" && zip -r "${SDK_PUBLISH_DIR}/${ARCH}-${RELEASE_TAG}-esdk.zip" "images/${TARGET}" \
+    (cd "${WORKDIR}" && zip -r "${SDK_PUBLISH_DIR}/${ARCH}-${TAG}-esdk.zip" "images/${TARGET}" \
         -i "images/${TARGET}/sdk/*-toolchain-ext-*.sh" \
         -i "images/${TARGET}/NOTICE" \
         -i "images/${TARGET}/NO.LOGIN.BINARY.LICENSE.QTI.pdf")
 
     # Standard SDK
-    (cd "${WORKDIR}" && zip -r "${SDK_PUBLISH_DIR}/${ARCH}-${RELEASE_TAG}-standardsdk.zip" "images/${TARGET}" \
+    (cd "${WORKDIR}" && zip -r "${SDK_PUBLISH_DIR}/${ARCH}-${TAG}-standardsdk.zip" "images/${TARGET}" \
         -i "images/${TARGET}/sdk/*-toolchain-*.sh" \
         -x "images/${TARGET}/sdk/*-toolchain-ext-*.sh" \
         -i "images/${TARGET}/NOTICE" \
         -i "images/${TARGET}/NO.LOGIN.BINARY.LICENSE.QTI.pdf")
 
     # QIRP SDK artifacts
-    (cd "${WORKDIR}" && zip -r "${SDK_PUBLISH_DIR}/${ARCH}-${RELEASE_TAG}-robotics-sdk-artifacts.zip" \
+    (cd "${WORKDIR}" && zip -r "${SDK_PUBLISH_DIR}/${ARCH}-${TAG}-robotics-sdk-artifacts.zip" \
         "images/${TARGET}/qirpsdk_artifacts" \
         "images/${TARGET}/NOTICE" \
         "images/${TARGET}/NO.LOGIN.BINARY.LICENSE.QTI.pdf")
@@ -170,8 +154,6 @@ stage_rpm() {
         --outdir    "$RPM_PUBLISH_DIR" \
         --workdir   "$RPM_LOGS_DIR"
 }
-
-# ─── Upload functions ─────────────────────────────────────────────────────────
 
 configure_jf() {
     jf c add clo-art \
@@ -197,55 +179,46 @@ upload_sdk() {
 
 upload_rpm() {
     local SRC="${PUBLISH_DIR}/rpm/(**)"
-    local DST="qli-robotics-yocto-rpm-signed/${RELEASE_TAG}/rpm/{1}"
+    local DST="qli-robotics-yocto-rpm-signed/${TAG}/rpm/{1}"
     jf rt u --detailed-summary --flat=false --include-dirs --recursive "$SRC" "$DST"
 }
 
-# ─── Main ─────────────────────────────────────────────────────────────────────
+main() {
+  parse_args $@
 
-# 1. Sync — clone SDK into target dir
-echo ">>> [1] Syncing SDK into ${TARGET_DIR}..."
-mkdir -p "$TARGET_DIR"
-cd "$TARGET_DIR" && git clone -b "$RELEASE_TAG" "$SDK_GIT"
+  [[ "$UPLOAD_IMAGES" == "1" || "$UPLOAD_RPM" == "1" || "$UPLOAD_SDK" == "1" ]] && configure_jf
 
-# 2. Build proprietary image + robotics image
-build_proprietary_image
-sleep 3
+  set -x
 
-# 3. Build non-proprietary robotics image (flashable image + RPMs)
-build_robotics_image
-sleep 3
+  mkdir -p "$TARGET_DIR" && cd "$TARGET_DIR"
 
+  git clone -b "$TAG" "$SDK_GIT"
 
-# 4. Generate SDK (only if SDK upload is requested)
-if [[ "$UPLOAD_SDK" == "1" ]]; then
-    build_sdk
-fi
+  if [[ "$UPLOAD_IMAGES" == "1" || "$UPLOAD_RPM" == "1" ]]; then
+      build_robotics_image
+      build_proprietary_image
+  fi
 
-# 5. Aggregate notices
-generate_notice
+  if [[ "$UPLOAD_SDK" == "1" ]]; then
+      build_sdk
+  fi
 
-# 6. Configure JFrog if any upload is requested
-if [[ "$UPLOAD_IMAGES" == "1" || "$UPLOAD_SDK" == "1" || "$UPLOAD_RPM" == "1" ]]; then
-    configure_jf
-fi
+  [[ "$UPLOAD_IMAGES" == "1" || "$UPLOAD_RPM" == "1" || "$UPLOAD_SDK" == "1" ]] && generate_notice
 
-# 7. Stage and upload flashable images
-if [[ "$UPLOAD_IMAGES" == "1" ]]; then
-    stage_image
-    upload_image
-fi
+  if [[ "$UPLOAD_IMAGES" == "1" ]]; then
+      stage_image
+      upload_image
+  fi
 
-# 8. Stage and upload SDK
-if [[ "$UPLOAD_SDK" == "1" ]]; then
-    stage_sdk
-    upload_sdk
-fi
+  if [[ "$UPLOAD_RPM" == "1" ]]; then
+      stage_rpm
+      upload_rpm
+  fi
 
-# 9. Stage and upload RPMs
-if [[ "$UPLOAD_RPM" == "1" ]]; then
-    stage_rpm
-    upload_rpm
-fi
+  if [[ "$UPLOAD_SDK" == "1" ]]; then
+      stage_sdk
+      upload_sdk
+  fi
+}
 
-tree -L 3 "${PUBLISH_DIR}" || true
+main "$@"
