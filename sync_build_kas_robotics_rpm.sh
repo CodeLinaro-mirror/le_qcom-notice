@@ -30,8 +30,8 @@ parse_args() {
     SDK_REPO="meta-qcom-robotics-sdk"
     SDK_GIT="https://github.com/qualcomm-linux/meta-qcom-robotics-sdk.git"
     SCRIPT_PATH="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-    CPU_COUNT=32
-    THREAD_COUNT=32
+    export CPU_COUNT=32
+    export THREAD_COUNT=32
 
     while [ $# -gt 0 ]; do
         case "$1" in
@@ -61,18 +61,11 @@ parse_args() {
     LOGS_DIR="${WORKDIR}/logs"
 }
 
-build_proprietary_image() {
-    echo ">>> Building proprietary image for ${TARGET}..."
-    cd "$TARGET_DIR"
-    time kas shell "${SDK_REPO}/ci/${TARGET}.yml:${SDK_REPO}/ci/linux-qcom-6.18.yml:${SDK_REPO}/ci/qcom-robotics-proprietary-image.yml:${SDK_REPO}/ci/qcom-robotics-distro.yml:${SDK_REPO}/ci/performance.yml" \
-        -c "bitbake -q -c build qcom-robotics-proprietary-image"
-}
-
 build_robotics_image() {
     echo ">>> Building robotics image for ${TARGET}..."
     cd "$TARGET_DIR"
     time kas shell "${SDK_REPO}/ci/${TARGET}.yml:${SDK_REPO}/ci/linux-qcom-6.18.yml:${SDK_REPO}/ci/qcom-robotics-image.yml:${SDK_REPO}/ci/qcom-robotics-distro.yml:${SDK_REPO}/ci/performance.yml" \
-        -c "bitbake -q -c build qcom-robotics-image"
+        -c "bitbake -q qcom-robotics-image qcom-robotics-proprietary-image"
 }
 
 build_sdk() {
