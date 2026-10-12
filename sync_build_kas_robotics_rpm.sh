@@ -191,7 +191,6 @@ main() {
 
   if [[ "$UPLOAD_IMAGES" == "1" || "$UPLOAD_RPM" == "1" ]]; then
       build_robotics_image
-      build_proprietary_image
   fi
 
   if [[ "$UPLOAD_SDK" == "1" ]]; then
