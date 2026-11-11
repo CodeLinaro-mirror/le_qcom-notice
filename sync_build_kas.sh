@@ -19,6 +19,12 @@ Usage:
     --tag
         branch name (Eg: qli-2.0)
 
+    --org
+        Organization hosting meta-layer (eg. qualcomm-linux)
+
+    --repo
+        meta-layer to be build (eg. meta-qcom)
+
     --machine
         machine one or more space-separated values (Eg: rb3gen2-core-kit, iq-9075-evk)
 
@@ -45,6 +51,8 @@ END_OF_USAGE
 
 parse_args() {
     UPLOAD=0
+    ORG=""
+    REPO=""
     MACHINES=()
     DISTROS=()
     SCRIPT_PATH="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -54,6 +62,8 @@ parse_args() {
            --help)     usage ;;
            --tag)      TAG="$2";      shift 2 ;;
            --arch)     ARCH="$2";     shift 2 ;;
+           --org)      ORG="$2";      shift 2 ;;
+           --repo)     REPO="$2";     shift 2 ;;
            --machine)
                shift
                while [[ $# -gt 0 && "$1" != --* ]]; do
@@ -76,8 +86,8 @@ parse_args() {
         esac
     done
 
-    if [[ -z "$TAG" || "${#MACHINES[@]}" -eq 0 || -z "$ARCH" || "${#DISTROS[@]}" -eq 0 ]]; then
-        echo "Error: --tag, --machine, --arch and --distro are required." >&2
+    if [[ -z "$TAG" || -z "$ORG" || -z "$REPO" || "${#MACHINES[@]}" -eq 0 || -z "$ARCH" || "${#DISTROS[@]}" -eq 0 ]]; then
+        echo "Error: --tag, --org, --repo, --machine, --arch and --distro are required." >&2
         usage
     fi
 
@@ -100,8 +110,8 @@ configure_jf() {
 build_image() {
   local MACHINE="$1"
   local DISTRO="$2"
-  time kas build meta-qcom/ci/$MACHINE.yml:meta-qcom/ci/$DISTRO.yml:meta-qcom/ci/performance.yml
-  time kas shell meta-qcom/ci/$MACHINE.yml:meta-qcom/ci/$DISTRO.yml:meta-qcom/ci/performance.yml -c "bitbake package-index"
+  time kas build $REPO/ci/$MACHINE.yml:$REPO/ci/$DISTRO.yml:$REPO/ci/performance.yml
+  time kas shell $REPO/ci/$MACHINE.yml:$REPO/ci/$DISTRO.yml:$REPO/ci/performance.yml -c "bitbake package-index"
 }
 
 build_sdk() {
@@ -109,13 +119,13 @@ build_sdk() {
   local DISTRO="$2"
   local ARCH="$3"
   [[ "$ARCH" == "arm" ]] && export SDKMACHINE=aarch64
-  time kas shell meta-qcom/ci/$MACHINE.yml:meta-qcom/ci/$DISTRO.yml:meta-qcom/ci/performance.yml -c "bitbake -c populate_sdk qcom-multimedia-proprietary-image && bitbake -c populate_sdk_ext qcom-multimedia-proprietary-image"
+  time kas shell $REPO/ci/$MACHINE.yml:$REPO/ci/$DISTRO.yml:$REPO/ci/performance.yml -c "bitbake -c populate_sdk qcom-multimedia-proprietary-image && bitbake -c populate_sdk_ext qcom-multimedia-proprietary-image"
 }
 
 build_downloads() {
   local MACHINE="$1"
   local DISTRO="$2"
-  time kas build meta-qcom/ci/$MACHINE.yml:meta-qcom/ci/$DISTRO.yml:meta-qcom/ci/mirror-tarballs.yml:meta-qcom/ci/performance.yml
+  time kas build $REPO/ci/$MACHINE.yml:$REPO/ci/$DISTRO.yml:$REPO/ci/mirror-tarballs.yml:$REPO/ci/performance.yml
 }
 
 generate_notice() {
@@ -186,7 +196,7 @@ stage_downloads() {
 
 upload_image() {
   local SRC="release/images/(**)"
-  local DST="qli-ci/flashable-binaries/meta-qcom/$DISTRO/$MACHINE/{1}"
+  local DST="qli-ci/flashable-binaries/$REPO/$DISTRO/$MACHINE/{1}"
   jf rt u --detailed-summary --flat=false --include-dirs --recursive "$SRC" "$DST"
 }
 
@@ -198,7 +208,7 @@ upload_rpm() {
 
 upload_sdk() {
   local SRC="release/sdk/(**)"
-  local DST="qli-ci/flashable-binaries/meta-qcom/$DISTRO/$MACHINE/{1}"
+  local DST="qli-ci/flashable-binaries/$REPO/$DISTRO/$MACHINE/{1}"
   jf rt u --detailed-summary --flat=false --include-dirs --recursive "$SRC" "$DST"
 }
 
@@ -252,7 +262,7 @@ main() {
 
   set -x
 
-  git clone https://github.com/qualcomm-linux/meta-qcom -b "$TAG"
+  git clone https://github.com/$ORG/$REPO -b "$TAG"
 
   for MACHINE in "${MACHINES[@]}"; do
     for DISTRO in "${DISTROS[@]}"; do
