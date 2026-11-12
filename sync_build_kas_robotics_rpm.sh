@@ -31,7 +31,7 @@ parse_args() {
     SDK_GIT="https://github.com/qualcomm-linux/meta-qcom-robotics-sdk.git"
     SCRIPT_PATH="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
     export CPU_COUNT=32
-    export THREAD_COUNT=32
+    export THREAD_COUNT=60
 
     while [ $# -gt 0 ]; do
         case "$1" in
