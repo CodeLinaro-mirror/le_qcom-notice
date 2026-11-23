@@ -43,14 +43,26 @@ Usage:
     --art-pass
         artifactory password (Eg: arm)
 
-    --upload
-        enable artifactory uploads
+    --upload-image
+        upload flashable images to artifactory
+
+    --upload-rpm
+        upload rpms to artifactory
+
+    --upload-sdk
+        upload sdks to artifactory
+
+    --upload-downloads
+        upload downloads to artifactory
 END_OF_USAGE
     exit 1
 }
 
 parse_args() {
-    UPLOAD=0
+    UPLOAD_IMAGE=0
+    UPLOAD_RPM=0
+    UPLOAD_SDK=0
+    UPLOAD_DOWNLOADS=0
     ORG=""
     REPO=""
     MACHINES=()
@@ -81,7 +93,10 @@ parse_args() {
            --art-url)  ART_URL="$2";  shift 2 ;;
            --art-user) ART_USER="$2"; shift 2 ;;
            --art-pass) ART_PASS="$2"; shift 2 ;;
-           --upload)   UPLOAD=1;      shift   ;;
+           --upload-image)     UPLOAD_IMAGE=1;     shift ;;
+           --upload-rpm)       UPLOAD_RPM=1;       shift ;;
+           --upload-sdk)       UPLOAD_SDK=1;       shift ;;
+           --upload-downloads) UPLOAD_DOWNLOADS=1; shift ;;
            *)          echo "Error: unrecognized option $1" >&2; usage ;;
         esac
     done
@@ -91,8 +106,10 @@ parse_args() {
         usage
     fi
 
+    UPLOAD=$(( UPLOAD_IMAGE || UPLOAD_RPM || UPLOAD_SDK || UPLOAD_DOWNLOADS ))
+
     if [[ "$UPLOAD" == 1 && ( -z "$ART_URL" || -z "$ART_USER" || -z "$ART_PASS" ) ]]; then
-        echo "Error: --art-url, --art-user and --art-pass are required when --upload is set." >&2
+        echo "Error: --art-url, --art-user and --art-pass are required when any --upload-* flag is set." >&2
         usage
     fi
 }
@@ -232,27 +249,27 @@ build_task() {
   # prebuilt images are identical for x86 and ARM architectures, only upload once
   if [[ $ARCH == "x86" ]]; then
     stage_image "$MACHINE" "$DISTRO"
-    [[ "$UPLOAD" == "1" ]] && upload_image "$DISTRO" "$MACHINE"
+    [[ "$UPLOAD_IMAGE" == "1" ]] && upload_image "$DISTRO" "$MACHINE"
   fi
 
   # rpms are only generated for qcom-distro variant
   if [[ $DISTRO == "qcom-distro" ]] && [[ $ARCH == "x86" ]]; then
     stage_rpm "$MACHINE" "$DISTRO"
-    [[ "$UPLOAD" == "1" ]] && upload_rpm "$MACHINE" "$DISTRO"
+    [[ "$UPLOAD_RPM" == "1" ]] && upload_rpm "$MACHINE" "$DISTRO"
   fi
 
   # sdks needs to be generated for the generic target only
   if [[ $MACHINE == "qcom-armv8a" ]]; then
     build_sdk "$MACHINE" "$DISTRO" "$ARCH"
     stage_sdk "$MACHINE" "$DISTRO"
-    [[ "$UPLOAD" == "1" ]] && upload_sdk $MACHINE $DISTRO
+    [[ "$UPLOAD_SDK" == "1" ]] && upload_sdk $MACHINE $DISTRO
   fi
 
   # downloads server needs to be populated only once
   if [[ $MACHINE == "qcom-armv8a" ]] && [[ $DISTRO == "qcom-distro" ]] && [[ $ARCH == "x86" ]]; then
     build_downloads "$MACHINE" qcom-distro-catchall
     stage_downloads
-    [[ "$UPLOAD" == "1" ]] && upload_downloads $MACHINE $DISTRO
+    [[ "$UPLOAD_DOWNLOADS" == "1" ]] && upload_downloads $MACHINE $DISTRO
   fi
 }
 
