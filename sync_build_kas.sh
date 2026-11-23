@@ -54,6 +54,9 @@ Usage:
 
     --upload-downloads
         upload downloads to artifactory
+
+    --mirror-path
+        release line used in the artifactory downloads path (Eg: 2.x), required with --upload-downloads
 END_OF_USAGE
     exit 1
 }
@@ -63,6 +66,7 @@ parse_args() {
     UPLOAD_RPM=0
     UPLOAD_SDK=0
     UPLOAD_DOWNLOADS=0
+    MIRROR_PATH=""
     ORG=""
     REPO=""
     MACHINES=()
@@ -93,6 +97,7 @@ parse_args() {
            --art-url)  ART_URL="$2";  shift 2 ;;
            --art-user) ART_USER="$2"; shift 2 ;;
            --art-pass) ART_PASS="$2"; shift 2 ;;
+           --mirror-path) MIRROR_PATH="$2"; shift 2 ;;
            --upload-image)     UPLOAD_IMAGE=1;     shift ;;
            --upload-rpm)       UPLOAD_RPM=1;       shift ;;
            --upload-sdk)       UPLOAD_SDK=1;       shift ;;
@@ -110,6 +115,11 @@ parse_args() {
 
     if [[ "$UPLOAD" == 1 && ( -z "$ART_URL" || -z "$ART_USER" || -z "$ART_PASS" ) ]]; then
         echo "Error: --art-url, --art-user and --art-pass are required when any --upload-* flag is set." >&2
+        usage
+    fi
+
+    if [[ "$UPLOAD_DOWNLOADS" == 1 && -z "$MIRROR_PATH" ]]; then
+        echo "Error: --mirror-path is required when --upload-downloads is set." >&2
         usage
     fi
 }
@@ -231,7 +241,7 @@ upload_sdk() {
 
 upload_downloads() {
   local SRC="release/downloads/(**)"
-  local DST="qli-ci/downloads/2.x/{1}"
+  local DST="qli-ci/downloads/$MIRROR_PATH/{1}"
   jf rt u --detailed-summary --flat=false --include-dirs --recursive "$SRC" "$DST"
 }
 
