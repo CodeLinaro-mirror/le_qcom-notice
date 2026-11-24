@@ -253,6 +253,14 @@ cleanup() {
 build_task() {
   cleanup
 
+  # catchall distro is only used to populate the downloads server
+  if [[ $DISTRO == "qcom-distro-catchall" ]]; then
+    build_downloads "$MACHINE" "$DISTRO"
+    stage_downloads
+    [[ "$UPLOAD_DOWNLOADS" == "1" ]] && upload_downloads "$MACHINE" "$DISTRO"
+    return 0
+  fi
+
   build_image "$MACHINE" "$DISTRO"
   generate_notice
 
@@ -273,13 +281,6 @@ build_task() {
     build_sdk "$MACHINE" "$DISTRO" "$ARCH"
     stage_sdk "$MACHINE" "$DISTRO"
     [[ "$UPLOAD_SDK" == "1" ]] && upload_sdk $MACHINE $DISTRO
-  fi
-
-  # downloads server needs to be populated only once
-  if [[ $MACHINE == "qcom-armv8a" ]] && [[ $DISTRO == "qcom-distro" ]] && [[ $ARCH == "x86" ]]; then
-    build_downloads "$MACHINE" qcom-distro-catchall
-    stage_downloads
-    [[ "$UPLOAD_DOWNLOADS" == "1" ]] && upload_downloads $MACHINE $DISTRO
   fi
 }
 
